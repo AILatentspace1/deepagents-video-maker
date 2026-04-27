@@ -45,7 +45,8 @@ def ratify_research(
             {"heading_count": heading_count},
         )
     )
-    if source != "local-file":
+    # Accept both "local-file" and "local_file" spellings
+    if source not in ("local-file", "local_file"):
         checks.append(
             RatifyCheck(
                 "min_urls",

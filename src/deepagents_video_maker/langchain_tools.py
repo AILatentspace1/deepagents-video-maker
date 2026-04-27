@@ -195,6 +195,20 @@ def vm_start_script(output_dir: str) -> dict[str, Any]:
 
     state_path = Path(output_dir) / "state.yaml"
     state = load_state_yaml(state_path)
+    research = state.milestone("research")
+    if research.status.value != "completed":
+        # Return a structured error instead of raising — crashing the stream is not helpful.
+        return {
+            "error": (
+                f"Cannot start script milestone: research status is '{research.status.value}' "
+                "(must be 'completed'). "
+                "Call vm_ratify_research first and ensure it passes before calling vm_start_script."
+            ),
+            "research_status": research.status.value,
+            "retry_count": research.retry_count,
+            "max_retries": research.max_retries,
+            "state": to_jsonable(state),
+        }
     run = start_script_milestone(state)
     save_state_yaml(state, state_path)
     return {"state": to_jsonable(state), "run": to_jsonable(run)}
@@ -345,7 +359,8 @@ def _goal_from_inputs(
             raise ValueError("topic is required when structured inputs are provided")
         goal = parse_video_request(f"topic={topic}")
         if source is not None:
-            goal.source = source  # type: ignore[assignment]
+            # Normalize underscore variant (local_file) → hyphen (local-file)
+            goal.source = source.replace("_", "-")  # type: ignore[assignment]
         if local_file is not None:
             goal.local_file = local_file
         if notebook_url is not None:

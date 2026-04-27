@@ -18,19 +18,51 @@ _SUBAGENT_SKILL_DIRS = {
 }
 
 
+def build_researcher_extra_tools() -> list[Any]:
+    """Return extra tools for the researcher subagent (e.g. web search).
+
+    Tavily is included when TAVILY_API_KEY is set in the environment.
+    Returns an empty list if no search key is configured.
+    """
+    tools: list[Any] = []
+    tavily_key = os.environ.get("TAVILY_API_KEY")
+    if tavily_key:
+        try:
+            from langchain_tavily import TavilySearch
+
+            tools.append(
+                TavilySearch(
+                    max_results=8,
+                    tavily_api_key=tavily_key,
+                    description=(
+                        "Search the web for up-to-date information. "
+                        "Use when source=websearch or when local knowledge is insufficient."
+                    ),
+                )
+            )
+        except ImportError:
+            pass  # langchain-tavily not installed; skip silently
+    return tools
+
+
 def build_subagents(project_root: str | Path | None = None) -> list[dict[str, Any]]:
     """Build DeepAgents subagent configs from native prompt files."""
 
     root = Path(project_root or Path.cwd()).resolve()
-    return [
-        {
+    researcher_extra_tools = build_researcher_extra_tools()
+
+    subagents: list[dict[str, Any]] = []
+    for name in SUBAGENT_NAMES:
+        spec: dict[str, Any] = {
             "name": name,
             "description": _subagent_description(name),
             "system_prompt": load_subagent_prompt(name),
             "skills": [str(root / _SUBAGENT_SKILL_DIRS[name])],
         }
-        for name in SUBAGENT_NAMES
-    ]
+        if name == "researcher" and researcher_extra_tools:
+            spec["tools"] = researcher_extra_tools
+        subagents.append(spec)
+    return subagents
 
 
 def build_native_tools() -> list[Callable[..., Any]]:

@@ -38,11 +38,33 @@ def load_env_files() -> None:
 
 
 def resolve_model(model: Any) -> Any:
-    """Resolve provider shortcuts, including DeepSeek OpenAI-compatible config."""
+    """Resolve provider shortcuts, including DeepSeek and Anthropic-compatible configs."""
     if not isinstance(model, str):
         return model
 
     normalized = model.strip()
+
+    # --- Anthropic-compatible route (ZhipuAI glm-5-turbo, etc.) ---
+    if normalized.startswith("anthropic:"):
+        from langchain_anthropic import ChatAnthropic
+
+        model_name = normalized.split(":", 1)[1]
+        api_key = (
+            os.environ.get("ANTHROPIC_AUTH_TOKEN")
+            or os.environ.get("ANTHROPIC_API_KEY")
+        )
+        if not api_key:
+            raise RuntimeError("anthropic: model requires ANTHROPIC_AUTH_TOKEN or ANTHROPIC_API_KEY.")
+        base_url = os.environ.get("ANTHROPIC_BASE_URL") or "https://api.anthropic.com"
+        return ChatAnthropic(
+            model=model_name,
+            api_key=api_key,
+            base_url=base_url,
+            max_retries=5,
+            timeout=120,
+        )
+
+    # --- DeepSeek OpenAI-compatible route ---
     deepseek_requested = normalized.startswith("deepseek:")
     deepseek_env_present = bool(os.environ.get("DEEPSEEK_API_KEY"))
     if not deepseek_requested and not (deepseek_env_present and normalized.startswith("deepseek-")):
