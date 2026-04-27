@@ -1,0 +1,7 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "video-maker": "./agent/agent.py:agent"
+  },
+  "env": "../.env"
+}

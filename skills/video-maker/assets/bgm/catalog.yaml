@@ -1,0 +1,64 @@
+# BGM Catalog — royalty-free tracks for video-maker
+# Actual .mp3 files are NOT bundled in the repo.
+# 首次使用前需手动放置 .mp3 文件到 skills/video-maker/assets/bgm/ 目录。
+# 推荐免版权音源站：
+#   - https://pixabay.com/music/ (免费，无需署名)
+#   - https://freesound.org/ (CC0/CC-BY)
+#   - https://uppbeat.io/ (免费版可商用)
+# 文件名必须与下方 file 字段一致，如 upbeat-tech.mp3。
+# Sound Engineer 在文件不存在时会跳过 BGM 处理（静默降级）。
+
+tracks:
+  - id: upbeat-tech
+    file: upbeat-tech.mp3
+    description: "Upbeat electronic, good for AI/tech/data topics"
+    duration_seconds: 120
+    loop: true
+    bpm: 128
+    mood: [energetic, optimistic, tech]
+    style_match: [professional, casual]
+
+  # - id: calm-corporate
+  #   file: calm-corporate.mp3
+  #   description: "Calm ambient, corporate presentations and product intros"
+  #   duration_seconds: 180
+  #   loop: true
+  #   bpm: 90
+  #   mood: [calm, trustworthy, clean]
+  #   style_match: [professional]
+
+  # - id: storytelling-piano
+  #   file: storytelling-piano.mp3
+  #   description: "Gentle piano melody for narrative/story videos"
+  #   duration_seconds: 150
+  #   loop: true
+  #   bpm: 72
+  #   mood: [emotional, warm, reflective]
+  #   style_match: [storytelling]
+
+  # - id: energetic-pop
+  #   file: energetic-pop.mp3
+  #   description: "Fast-paced pop for news/trending topics"
+  #   duration_seconds: 120
+  #   loop: true
+  #   bpm: 140
+  #   mood: [energetic, exciting, urgent]
+  #   style_match: [casual]
+
+  # - id: ambient-minimal
+  #   file: ambient-minimal.mp3
+  #   description: "Minimal ambient for philosophical/meditative content"
+  #   duration_seconds: 200
+  #   loop: true
+  #   bpm: 60
+  #   mood: [minimal, contemplative, spacious]
+  #   style_match: [storytelling, professional]
+
+  # - id: dramatic-cinematic
+  #   file: dramatic-cinematic.mp3
+  #   description: "Cinematic orchestral for documentary/dramatic content"
+  #   duration_seconds: 160
+  #   loop: true
+  #   bpm: 100
+  #   mood: [dramatic, epic, tense]
+  #   style_match: [storytelling]

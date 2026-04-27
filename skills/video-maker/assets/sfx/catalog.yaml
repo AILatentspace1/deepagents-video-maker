@@ -1,0 +1,57 @@
+# SFX Catalog — sound effects for video-maker
+# .wav files are bundled in this directory (FFmpeg synthesized).
+# Scriptwriter uses the `id` field in sfx_cues output.
+# Editor maps: sfx_name → "sfx/{id}.wav" in sfx-add CLI command.
+# 如需替换为更专业的音效，保持文件名不变即可（推荐来源同 BGM catalog）。
+
+effects:
+  # --- Scene lifecycle SFX ---
+  - id: intro-stinger
+    file: intro-stinger.mp3
+    description: "Opening accent — rising tone for hook scenes"
+    duration_seconds: 0.8
+    trigger_rule: "scene 1 (hook) at 0%"
+    mood: [attention, energy, start]
+
+  - id: outro-jingle
+    file: outro-jingle.mp3
+    description: "Closing chord — descending triad for CTA scenes"
+    duration_seconds: 1.2
+    trigger_rule: "last scene (cta) at 0%"
+    mood: [closure, warmth, completion]
+
+  # --- Scene type SFX ---
+  - id: title-whoosh
+    file: title-whoosh.mp3
+    description: "Swoosh for title card entrance"
+    duration_seconds: 0.5
+    trigger_rule: "title_card at 0%"
+    mood: [movement, transition]
+
+  - id: counter-pop
+    file: counter-pop.mp3
+    description: "Short pop for data counter completion"
+    duration_seconds: 0.3
+    trigger_rule: "data_card (counter type) at 85%"
+    mood: [punctuation, achievement]
+
+  - id: bar-impact
+    file: bar-impact.mp3
+    description: "Low-frequency impact for bar chart/comparison reveal"
+    duration_seconds: 0.6
+    trigger_rule: "data_card (comparison/bar-chart) at 80%"
+    mood: [weight, impact, data]
+
+  - id: quote-chime
+    file: quote-chime.mp3
+    description: "Dual-tone chime for quote card entrance"
+    duration_seconds: 0.8
+    trigger_rule: "quote_card at 5%"
+    mood: [elegance, highlight]
+
+  - id: transition-swoosh
+    file: transition-swoosh.mp3
+    description: "Quick noise sweep for scene transitions"
+    duration_seconds: 0.4
+    trigger_rule: "transition at 0%"
+    mood: [movement, flow]

@@ -1,0 +1,15 @@
+name: "Warm Story"
+description: "暖色叙事：人文暖黄 + 散景光斑 + 电影字幕"
+category: "人物/历史/旅行"
+preview_colors: ["#2d1b00", "#ffb347", "#ff6b6b"]
+primaryColor: "#2d1b00"
+accentColor: "#ffb347"
+lutStyle: "warm_human"
+progressBarStyle: "chapter_dot"
+audioWaveform:
+  variant: "waveform-line"
+bgmTrack: "storytelling-piano"
+subtitleVariant: "minimal"
+lowerThirdVariant: "fade-up"
+colorGradeVariant: "warm-overlay"
+backgroundVariant: "ken-burns"

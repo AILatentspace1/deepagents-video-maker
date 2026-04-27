@@ -1,0 +1,103 @@
+{
+  "lessons": [
+    {
+      "trigger": "video-cli export 生成的 video-config.json 用于 Remotion 渲染",
+      "outcome": "视频全黑——所有 codegen 场景（narration/data_card/quote_card）渲染为空，因为 video-config.json 中缺少 generatedComponent 字段",
+      "fix": "video-cli buildVideoConfig 现在自动扫描 src/generated/Scene*.tsx，为匹配的 scene 注入 generatedComponent 字段。同时自动生成 generated/index.ts 静态 import registry",
+      "confidence": 1.0,
+      "date": "2026-04-08"
+    },
+    {
+      "trigger": "GeneratedSceneShell 使用 React.lazy(() => import(/* @vite-ignore */ path)) 动态加载场景组件",
+      "outcome": "Remotion bundler (webpack/esbuild) 不支持变量路径的动态 import，报错 Cannot find module",
+      "fix": "改为 src/generated/index.ts 静态 import registry + getGeneratedScene(path) 查找函数，由 video-cli export 自动生成",
+      "confidence": 1.0,
+      "date": "2026-04-08"
+    },
+    {
+      "trigger": "lint-scene 命令处理单数字场景号（如 --scene 1）",
+      "outcome": "路径拼接为 scene-1/Scene1.tsx 而非 scene-01/Scene01.tsx，导致文件找不到",
+      "fix": "lint-scene.ts 添加 opts.scene.padStart(2, '0')，与 compile-scene 保持一致",
+      "confidence": 1.0,
+      "date": "2026-04-08"
+    },
+    {
+      "trigger": "Whisper 生成字幕后，copy-assets 需要将字幕拷贝到 Remotion public/",
+      "outcome": "Whisper 输出 captions.srt，但 Remotion 和 manifest 期望 captions.json 格式，导致字幕未拷贝",
+      "fix": "whisper 命令在生成 SRT 后自动转换输出 captions.json（srtToJson），copy-assets 优先查找 .json 回退 .srt",
+      "confidence": 1.0,
+      "date": "2026-04-08"
+    },
+    {
+      "trigger": "video-cli scene add 添加 diagram_walkthrough 类型的场景",
+      "outcome": "scene add 帮助文档不列出 diagram_walkthrough 类型，用户改用 narration 类型导致场景走错渲染分支",
+      "fix": "更新 scene add description 列出所有 6 种场景类型",
+      "confidence": 0.9,
+      "date": "2026-04-08"
+    },
+    {
+      "trigger": "3:4 竖屏比例下生成水平三栏布局的场景组件",
+      "outcome": "三个元素（Generator + ProgressRing + Evaluator）在 810px 宽度中互相重叠",
+      "fix": "3:4 竖屏布局优先使用垂直排列（上中下），避免水平三栏。Scene Generator content_brief 应明确指定竖屏布局方向",
+      "confidence": 0.9,
+      "date": "2026-04-08"
+    },
+    {
+      "trigger": "codegen 生成的场景组件使用 justifyContent: 'space-between' + flexDirection: 'column'",
+      "outcome": "竖屏（3:4/9:16）场景中 5 个元素被均匀撒开，大量空白，布局松散不美观",
+      "fix": "编辑器 prompt 添加视觉设计原则：禁止纵向 space-between，强制 center+gap 布局；lint-scene 新增 no-space-between-vertical 规则自动检测",
+      "confidence": 1.0,
+      "date": "2026-04-08"
+    },
+    {
+      "trigger": "fade 转场在深色背景场景之间渲染",
+      "outcome": "场景间一闪一闪：Suspense fallback 无背景色(白色)导致闪帧 + 内联组件硬编码#0f172a与theme.colors.surface不一致导致色差 + 15帧fade太快",
+      "fix": "GeneratedSceneShell Suspense fallback 加 theme.colors.surface 背景；TitleCard/TransitionCard/DiagramScene 改为接收 surfaceColor prop；默认 transition duration 从 15 提升到 30 帧",
+      "confidence": 1.0,
+      "date": "2026-04-08"
+    }
+    ,
+    {
+      "trigger": "Assets 里程碑有 11 个 codegen 场景需要逐场景审查",
+      "outcome": "Producer 跳过了逐场景 render-preview + human-approve 循环，直接批量 codegen 后全片组装。用户发现后指出流程违规",
+      "fix": "严格按 SKILL 定义执行：每个 codegen 场景完成后必须 render-scene 生成预览截图 → AskUserQuestion approve/reject/feedback → 通过后才进下一个场景。批量 codegen 可以并行生成 .tsx，但审查必须逐个进行",
+      "confidence": 1.0,
+      "date": "2026-04-09"
+    },
+    {
+      "trigger": "Edge TTS 生成的 SRT 字幕通过 pipeline-cli whisper 转 JSON",
+      "outcome": "whisper 命令的 SRT→JSON 转换器将整个 SRT 内容错误地塞入单个 JSON entry 的 text 字段，导致 CaptionOverlay 无法正确解析字幕",
+      "fix": "Edge TTS 已自带 SRT 输出，用自定义 Python 脚本正确解析 SRT（按 entry 分割、时间码转帧号）生成 JSON。或检查 pipeline-cli whisper 的 srtToJson 实现是否有 bug",
+      "confidence": 1.0,
+      "date": "2026-04-09"
+    },
+    {
+      "trigger": "video-config.json 中 captionsFile 路径为 .srt 扩展名",
+      "outcome": "CaptionOverlay 组件用 fetch().json() 解析字幕文件，.srt 不是 JSON 格式，解析失败被静默 catch，视频无字幕",
+      "fix": "captionsFile 路径必须指向 .json 文件。import-json 命令生成的路径如果是 .srt，需要在 export 前替换为 .json。或修改 CaptionOverlay 支持 SRT 格式回退",
+      "confidence": 1.0,
+      "date": "2026-04-09"
+    },
+    {
+      "trigger": "Voicebox TTS 服务返回 500 Internal Server Error",
+      "outcome": "所有 12 个场景的 TTS 生成全部失败，阻塞整个 assets 流水线",
+      "fix": "Edge TTS (edge-tts Python 包) 作为 Voicebox 的可靠回退方案。使用 zh-CN-YunyangNeural 声音（专业新闻风格），加 --rate=+5% 稍快语速，通过 --proxy 访问。Edge TTS 同时生成 WAV + SRT",
+      "confidence": 1.0,
+      "date": "2026-04-09"
+    },
+    {
+      "trigger": "codegen 生成的 Scene01.tsx 使用 src=\"/assets/scene-01/image_0.jpg\" 引用图片",
+      "outcome": "Remotion render 报 404 — staticFile() 不支持绝对路径，需要相对于 public/ 的路径",
+      "fix": "codegen 场景中引用图片必须用 staticFile(\"assets/scene-01/image_0.jpg\")（无前导斜杠），并在 import 中包含 { staticFile } from 'remotion'",
+      "confidence": 1.0,
+      "date": "2026-04-09"
+    },
+    {
+      "trigger": "Edge TTS --write-subtitles 生成的 SRT 用作字幕",
+      "outcome": "Edge TTS SRT 粒度极粗（5秒一段），在句子中间断开，字幕体验差。Whisper 同一段音频识别出 9 段精确到句的时间戳",
+      "fix": "字幕永远用 Whisper 生成，不用 TTS 自带字幕。TTS 只输出音频。Edge TTS 不加 --write-subtitles。whisper.ts 不跳过已有 SRT",
+      "confidence": 1.0,
+      "date": "2026-04-09"
+    }
+  ]
+}

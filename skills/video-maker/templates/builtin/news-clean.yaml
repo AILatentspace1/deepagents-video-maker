@@ -1,0 +1,15 @@
+name: "News Clean"
+description: "新闻简洁：中性色调 + 极简背景 + 框选字幕"
+category: "新闻/评论/分析"
+preview_colors: ["#1a1a2e", "#e94560", "#ffffff"]
+primaryColor: "#1a1a2e"
+accentColor: "#e94560"
+lutStyle: "news_neutral"
+progressBarStyle: "broadcast"
+audioWaveform:
+  variant: "bass-pulse"
+bgmTrack: "calm-corporate"
+subtitleVariant: "boxed"
+lowerThirdVariant: "slide-in"
+colorGradeVariant: "dark-multiply"
+backgroundVariant: "solid"

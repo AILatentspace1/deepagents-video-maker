@@ -1,0 +1,21 @@
+[project]
+name = "deepagents-video-maker"
+version = "0.1.0"
+description = "DeepAgents-native video-maker orchestrator"
+requires-python = ">=3.11"
+dependencies = [
+  "deepagents>=0.5.3",
+  "langchain>=0.3.0",
+  "langchain-core>=0.3.0",
+  "langchain-anthropic>=0.3.0",
+  "langchain-openai>=0.3.0",
+  "PyYAML>=6.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.0.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests/deepagents_video_maker"]
+pythonpath = ["src"]
+addopts = "-q -p no:cacheprovider"

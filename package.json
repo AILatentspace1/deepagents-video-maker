@@ -1,0 +1,10 @@
+{
+  "name": "deepagents-video-maker",
+  "private": true,
+  "packageManager": "pnpm@9",
+  "scripts": {
+    "ui:dev": "pnpm --filter deepagent-video-maker-ui dev",
+    "agent:dev": "uv run langgraph dev --config web-ui/langgraph.json",
+    "test:py": "uv run pytest tests/deepagents_video_maker"
+  }
+}

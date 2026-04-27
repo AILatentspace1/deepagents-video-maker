@@ -1,0 +1,28 @@
+# Video-Maker Milestone Pipeline
+# Producer 按此序列依次执行里程碑。新增里程碑只需添加 entry + prompt 文件 + ratify 规则。
+
+milestones:
+  - id: research
+    prompt: milestones/research.md
+    ratify: ratify/research-rules.md
+    agents: [researcher]
+    depends_on: []
+
+  - id: script
+    prompt: milestones/script.md
+    ratify: ratify/script-rules.md
+    agents: [scriptwriter]
+    depends_on: [research]
+
+  - id: assets
+    prompt: milestones/assets.md
+    ratify: ratify/assets-rules.md
+    agents: []
+    depends_on: [script]
+
+  - id: assembly
+    prompt: milestones/assembly.md
+    ratify: ratify/assembly-rules.md
+    agents: []
+    depends_on: [assets]
+

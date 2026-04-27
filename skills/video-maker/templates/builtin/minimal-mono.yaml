@@ -1,0 +1,16 @@
+name: "Minimal Mono"
+description: "极简单色：黑白灰 + 打字机字幕 + 无动态背景"
+category: "思考/哲学/文学"
+preview_colors: ["#0d0d0d", "#ffffff", "#666666"]
+
+primaryColor: "#0d0d0d"
+accentColor: "#ffffff"
+lutStyle: "none"
+progressBarStyle: "minimal"
+audioWaveform:
+  variant: "waveform-line"
+bgmTrack: "ambient-minimal"
+subtitleVariant: "minimal"
+lowerThirdVariant: "typewriter"
+colorGradeVariant: "dark-multiply"
+backgroundVariant: "solid"

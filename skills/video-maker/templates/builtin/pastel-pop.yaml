@@ -1,0 +1,15 @@
+name: "Pastel Pop"
+description: "梦幻糖果：浅色系 + 渐变流动 + TikTok 高亮"
+category: "生活/创意/教程"
+preview_colors: ["#ffeef2", "#ff69b4", "#7c3aed"]
+primaryColor: "#ffeef2"
+accentColor: "#ff69b4"
+lutStyle: "pastel_dream"
+progressBarStyle: "chapter_dot"
+audioWaveform:
+  variant: "mirror-spectrum"
+bgmTrack: "energetic-pop"
+subtitleVariant: "minimal"
+lowerThirdVariant: "typewriter"
+colorGradeVariant: "warm-overlay"
+backgroundVariant: "gradient-flow"

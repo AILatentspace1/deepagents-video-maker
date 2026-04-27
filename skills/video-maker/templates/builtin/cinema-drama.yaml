@@ -1,0 +1,16 @@
+name: "Cinema Drama"
+description: "电影戏剧：高反差 + 金色点缀 + 电影质感"
+category: "纪录片/悬疑/传记"
+preview_colors: ["#0f0f0f", "#c9a959", "#8b0000"]
+
+primaryColor: "#0f0f0f"
+accentColor: "#c9a959"
+lutStyle: "cinematic_drama"
+progressBarStyle: "broadcast"
+audioWaveform:
+  variant: "bass-pulse"
+bgmTrack: "dramatic-cinematic"
+subtitleVariant: "karaoke"
+lowerThirdVariant: "fade-up"
+colorGradeVariant: "warm-overlay"
+backgroundVariant: "parallax"

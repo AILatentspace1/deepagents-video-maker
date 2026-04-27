@@ -1,0 +1,15 @@
+name: "Tech Noir"
+description: "科技深蓝：冷色高对比 + 频谱波形 + 霓虹字幕"
+category: "科技/AI/数据"
+preview_colors: ["#0a0e27", "#00d4ff", "#ff6b35"]
+primaryColor: "#0a0e27"
+accentColor: "#00d4ff"
+lutStyle: "tech_cool"
+progressBarStyle: "minimal"
+audioWaveform:
+  variant: "spectrum-bar"
+bgmTrack: "upbeat-tech"
+subtitleVariant: "minimal"
+lowerThirdVariant: "slide-in"
+colorGradeVariant: "cool-tint"
+backgroundVariant: "particle"
