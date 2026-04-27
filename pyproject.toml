@@ -10,6 +10,8 @@ dependencies = [
   "langchain-anthropic>=0.3.0",
   "langchain-openai>=0.3.0",
   "PyYAML>=6.0",
+  "tavily-python>=0.7.23",
+  "langchain-tavily>=0.2.18",
 ]
 
 [dependency-groups]
