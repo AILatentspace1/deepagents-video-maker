@@ -16,3 +16,4 @@ test-results/
 .langgraph_api/
 .langgraph-dev.*
 uv.lock
+.claude/

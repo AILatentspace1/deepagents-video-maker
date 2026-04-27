@@ -10,12 +10,16 @@ dependencies = [
   "langchain-anthropic>=0.3.0",
   "langchain-openai>=0.3.0",
   "PyYAML>=6.0",
+  "langchain-community>=0.4.1",
   "tavily-python>=0.7.23",
   "langchain-tavily>=0.2.18",
 ]
 
 [dependency-groups]
-dev = ["pytest>=8.0.0"]
+dev = [
+    "langgraph-cli[inmem]>=0.2",
+    "pytest>=8.0.0",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests/deepagents_video_maker"]
