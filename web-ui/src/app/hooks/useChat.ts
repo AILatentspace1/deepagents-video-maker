@@ -62,7 +62,7 @@ export function useChat({
           optimisticValues: (prev) => ({
             messages: [...(prev.messages ?? []), newMessage],
           }),
-          config: { ...(activeAssistant?.config ?? {}), recursion_limit: 100 },
+          config: { ...(activeAssistant?.config ?? {}), recursion_limit: 150 },
         }
       );
       // Update thread list immediately when sending a message
@@ -92,7 +92,10 @@ export function useChat({
       } else {
         stream.submit(
           { messages },
-          { config: activeAssistant?.config, interruptBefore: ["tools"] }
+          {
+            config: activeAssistant?.config,
+            interruptBefore: ["tools"],
+          }
         );
       }
     },
@@ -114,7 +117,7 @@ export function useChat({
       stream.submit(undefined, {
         config: {
           ...(activeAssistant?.config || {}),
-          recursion_limit: 100,
+          recursion_limit: 150,
         },
         ...(hasTaskToolCall
           ? { interruptAfter: ["tools"] }
