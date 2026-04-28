@@ -1,0 +1,102 @@
+# harness/video-maker.toml
+# Better-harness configuration for the video-maker agent.
+#
+# Reference:
+#   https://github.com/langchain-ai/deepagents/tree/main/examples/better-harness
+#   https://blog.langchain.com/improving-deep-agents-with-harness-engineering/
+#
+# Usage:
+#   uv run better-harness validate harness/video-maker.toml
+#   uv run better-harness run harness/video-maker.toml \
+#       --output-dir runs/baseline --max-iterations 1
+#   uv run better-harness run harness/video-maker.toml \
+#       --output-dir runs/optimised --max-iterations 10
+
+[harness]
+name        = "video-maker"
+description = "Autonomous harness optimisation for the DeepAgents video-maker agent"
+
+# The inner agent being optimised.
+# Must be importable as `from <module> import <attr>`.
+inner_agent = "deepagents_video_maker.agent:create_video_maker_agent"
+
+# Model the *outer* optimiser agent uses.
+outer_model = "claude-sonnet-4-6"
+
+# How to run evals.  "pytest" means `uv run pytest <eval_set_path>`.
+runner      = "pytest"
+
+# Maximum number of propose-evaluate-keep/discard cycles.
+max_iterations = 10
+
+# ---------------------------------------------------------------------------
+# Eval sets
+# ---------------------------------------------------------------------------
+# Each set maps a name to the pytest path the runner will invoke.
+# better-harness passes `--evals-report-file <tmp>.json` automatically.
+
+[eval_sets]
+train    = "tests/evals/train"
+holdout  = "tests/evals/holdout"
+scorecard = "tests/evals/scorecard"
+
+# ---------------------------------------------------------------------------
+# Optimisable harness surfaces
+# ---------------------------------------------------------------------------
+# kind = "workspace_file"  → the outer agent can read/edit this file directly.
+# kind = "module_attr"     → the outer agent rewrites a Python attribute by
+#                            editing the source file at `target`.
+
+[[surfaces]]
+name        = "producer-prompt"
+kind        = "workspace_file"
+target      = "skills/video-maker/SKILL.md"
+description = "Main system prompt that drives the Producer agent (parameter collection, milestone loop, failure handling)."
+
+[[surfaces]]
+name        = "researcher-agent"
+kind        = "workspace_file"
+target      = "skills/video-maker/agents/researcher.md"
+description = "Researcher subagent prompt (input/output contracts, execution strategy, output format)."
+
+[[surfaces]]
+name        = "scriptwriter-agent"
+kind        = "workspace_file"
+target      = "skills/video-maker/agents/scriptwriter.md"
+description = "Scriptwriter subagent prompt (scene types, manifest schema, quality rules)."
+
+[[surfaces]]
+name        = "langchain-tools"
+kind        = "workspace_file"
+target      = "src/deepagents_video_maker/langchain_tools.py"
+description = "Typed LangChain tool wrappers (vm_build_researcher_task, vm_ratify_research, etc.)."
+
+[[surfaces]]
+name        = "agent-factory"
+kind        = "workspace_file"
+target      = "src/deepagents_video_maker/agent.py"
+description = "Agent factory: subagent wiring, tool registration, system-prompt loading."
+
+[[surfaces]]
+name        = "research-milestone"
+kind        = "workspace_file"
+target      = "skills/video-maker/milestones/research.md"
+description = "Research milestone execution logic (task dispatch, retry rules)."
+
+[[surfaces]]
+name        = "script-milestone"
+kind        = "workspace_file"
+target      = "skills/video-maker/milestones/script.md"
+description = "Script milestone execution logic (scriptwriter dispatch, GAN evaluator loop)."
+
+[[surfaces]]
+name        = "research-ratify-rules"
+kind        = "workspace_file"
+target      = "skills/video-maker/ratify/research-rules.md"
+description = "Research quality gate criteria (min_chars, min_headings, URL requirements)."
+
+[[surfaces]]
+name        = "script-ratify-rules"
+kind        = "workspace_file"
+target      = "skills/video-maker/ratify/script-rules.md"
+description = "Script quality gate criteria (scene fields, manifest schema, scene-count match)."

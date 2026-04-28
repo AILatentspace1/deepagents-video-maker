@@ -5,6 +5,12 @@
   "scripts": {
     "ui:dev": "pnpm --filter deepagent-video-maker-ui dev",
     "agent:dev": "cd web-ui && uv run langgraph dev",
-    "test:py": "uv run pytest tests/deepagents_video_maker"
+    "test:py": "uv run pytest tests/deepagents_video_maker",
+    "evals:train": "uv run pytest tests/evals/train -q",
+    "evals:holdout": "uv run pytest tests/evals/holdout -q",
+    "evals:scorecard": "uv run pytest tests/evals/scorecard -q",
+    "evals:all": "uv run pytest tests/evals -q",
+    "harness:validate": "uv run better-harness validate harness/video-maker.toml",
+    "harness:run": "uv run better-harness run harness/video-maker.toml --output-dir runs/baseline --max-iterations 1"
   }
 }
