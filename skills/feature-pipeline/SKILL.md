@@ -162,7 +162,7 @@ ralph-loop 不要跨 Ship gate,Ship 永远停在人面前。
 
 以下 rationalization 一旦出现,直接判定为违规,并执行右侧 counter-action:
 
-| 违规说法(示例) | 判定 | 必须执行的 counter-action |
+| Violation Example (违规说法示例) | Judgment (判定) | Required Counter-Action (必须执行的 counter-action) |
 |---|---|---|
 | "需求很小,design 先略过,后面补" | 跳 gate | 仅允许 `skip_design: true` 且在 plan frontmatter 显式声明并写明理由 |
 | "verify 第 3 次失败,我先 hotfix 然后 ship" | 绕过回退 | 立即回 Plan,`retry_count += 1`,并在 `Failure Notes` 写 root cause 与候选修复 |

@@ -55,7 +55,7 @@ Map pipeline statuses to Linear states:
 If using Linear API webhooks, create a sync routine:
 
 ```python
-# Pseudocode for sync routine
+# Python pseudocode for sync routine
 def sync_to_linear(plan_path):
     plan = read_frontmatter(plan_path)
     linear_issue = plan.get('linear_issue')
