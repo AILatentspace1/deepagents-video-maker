@@ -4,7 +4,7 @@
   "packageManager": "pnpm@9",
   "scripts": {
     "ui:dev": "pnpm --filter deepagent-video-maker-ui dev",
-    "agent:dev": "uv run langgraph dev --config web-ui/langgraph.json",
+    "agent:dev": "cd web-ui && uv run langgraph dev",
     "test:py": "uv run pytest tests/deepagents_video_maker"
   }
 }
