@@ -65,14 +65,14 @@ stratum = "scene_quality"
 [[cases]]
 case_id = "tests/evals/test_script_llm_stress.py::test_llm_scriptwriter_ultra_short"
 split = "train"
-stratum = "duration"
+stratum = "scene_quality"
 
 [[cases]]
 case_id = "tests/evals/test_script_llm_stress.py::test_llm_scriptwriter_pure_narrative"
 split = "train"
-stratum = "content_type"
+stratum = "structure"
 
 [[cases]]
 case_id = "tests/evals/test_script_llm_stress.py::test_llm_scriptwriter_zh_en_mix"
 split = "holdout"
-stratum = "locale"
+stratum = "structure"
