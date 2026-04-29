@@ -8,6 +8,6 @@
     "test:py": "uv run pytest tests/deepagents_video_maker",
     "test:evals": "uv run pytest tests/evals/ -v",
     "harness:validate": "uv run better-harness validate harness/video-maker-minimal.toml",
-    "harness:run": "uv run better-harness run harness/video-maker-minimal.toml --output-dir runs/$(node -e \"const d=new Date();const p=n=>String(n).padStart(2,'0');process.stdout.write(d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'-'+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds()))\") --max-iterations 5"
+    "harness:run": "pwsh -NoProfile -File scripts/run-harness.ps1"
   }
 }

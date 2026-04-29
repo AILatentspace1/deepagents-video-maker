@@ -17,7 +17,7 @@ max_iterations = 5
 [better_agent]
 # The optimizer itself uses the stronger model (claude-sonnet-4-6 / glm-5-turbo)
 model = "claude-sonnet-4-6"
-max_turns = 30
+max_turns = 200
 
 [runner.pytest]
 project_root = ".."
