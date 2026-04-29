@@ -200,17 +200,35 @@ def build_agent(model: Any, interrupt: bool = False, checkpointer: bool = False)
 
 
 def check_files() -> None:
-    init_path = PROJECT_ROOT / "src" / "deepagents_video_maker" / "__init__.py"
-    skill_path = PROJECT_ROOT / "skills" / "video-maker" / "SKILL.md"
-    missing = []
-    if not init_path.exists():
-        missing.append(str(init_path.relative_to(PROJECT_ROOT)))
-    if not skill_path.exists():
-        missing.append(str(skill_path.relative_to(PROJECT_ROOT)))
+    required_paths = [
+        PROJECT_ROOT / "src" / "deepagents_video_maker" / "__init__.py",
+        PROJECT_ROOT / "skills" / "video-maker" / "SKILL.md",
+        PROJECT_ROOT / ".deepagents" / "skills" / "video-researcher" / "SKILL.md",
+        PROJECT_ROOT / ".deepagents" / "skills" / "video-scriptwriter" / "SKILL.md",
+    ]
+    missing = [
+        str(p.relative_to(PROJECT_ROOT)) for p in required_paths if not p.exists()
+    ]
     if missing:
-        raise SystemExit("Missing required files:\n" + "\n".join(missing))
+        raise SystemExit(
+            "Missing required files (run 'git status' to check checkout):\n"
+            + "\n".join(f"  - {f}" for f in missing)
+        )
+    empty = [
+        str(p.relative_to(PROJECT_ROOT))
+        for p in required_paths
+        if p.stat().st_size == 0
+    ]
+    if empty:
+        raise SystemExit(
+            "Required files are empty (re-run 'git checkout' or check LFS):\n"
+            + "\n".join(f"  - {f}" for f in empty)
+        )
     print("OK: deepagents-video-maker files are present.")
-    print(f"Project root: {PROJECT_ROOT}")
+    print(f"  project root : {PROJECT_ROOT}")
+    for p in required_paths:
+        size = p.stat().st_size
+        print(f"  {p.relative_to(PROJECT_ROOT)} ({size} bytes)")
 
 
 def main() -> None:
