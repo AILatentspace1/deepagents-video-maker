@@ -24,3 +24,20 @@ pnpm ui:dev                      # Next.js UI dev server
 - Node: `pnpm ...` always
 - No `.claude/skills` path references in code — use `skills/video-maker/` instead
 - Commit style: conventional commits (feat, fix, docs, chore, refactor, test)
+
+## Harness Optimization (better-harness)
+
+Autonomous optimization of agent prompts using eval-driven feedback:
+
+```bash
+# Run eval tests
+pnpm test:evals
+
+# Validate harness config
+pnpm harness:validate
+
+# Run optimization loop (requires better-harness installed)
+pnpm harness:run
+```
+
+See `harness/README.md` for setup instructions.
