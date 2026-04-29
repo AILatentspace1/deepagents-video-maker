@@ -4,10 +4,9 @@ import json
 import pytest
 from pathlib import Path
 
-from deepagents_video_maker.models import MilestoneState, MilestoneStatus, VideoMakerGoal
+from deepagents_video_maker.models import MilestoneStatus, VideoMakerGoal
 from deepagents_video_maker.params import derive_video_params
 from deepagents_video_maker.script_flow import (
-    build_scriptwriter_task_description,
     ratify_and_update_script,
     start_script_milestone,
 )
@@ -35,8 +34,8 @@ def setup_session(tmp_path, sample_research_content):
     research_milestone.status = MilestoneStatus.COMPLETED
     research_milestone.current_run = 1
 
-    # Write research file
-    research_dir = tmp_path / "artifacts" / "research" / "run-1"
+    # Write research file under the session's output_dir
+    research_dir = Path(state.output_dir) / "artifacts" / "research" / "run-1"
     research_dir.mkdir(parents=True, exist_ok=True)
     (research_dir / "research.md").write_text(sample_research_content, encoding="utf-8")
 

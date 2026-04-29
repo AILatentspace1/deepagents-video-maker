@@ -7,7 +7,7 @@ import json
 import pytest
 from pathlib import Path
 
-from deepagents_video_maker.models import MilestoneState, MilestoneStatus, VideoMakerGoal
+from deepagents_video_maker.models import MilestoneStatus, VideoMakerGoal
 from deepagents_video_maker.params import derive_video_params
 from deepagents_video_maker.script_flow import (
     ratify_and_update_script,
@@ -76,7 +76,7 @@ def setup_storytelling_session(tmp_path, storytelling_research):
     research_milestone.status = MilestoneStatus.COMPLETED
     research_milestone.current_run = 1
 
-    research_dir = tmp_path / "artifacts" / "research" / "run-1"
+    research_dir = Path(state.output_dir) / "artifacts" / "research" / "run-1"
     research_dir.mkdir(parents=True, exist_ok=True)
     (research_dir / "research.md").write_text(storytelling_research, encoding="utf-8")
 
@@ -142,7 +142,7 @@ def setup_short_session(tmp_path, short_duration_research):
     research_milestone.status = MilestoneStatus.COMPLETED
     research_milestone.current_run = 1
 
-    research_dir = tmp_path / "artifacts" / "research" / "run-1"
+    research_dir = Path(state.output_dir) / "artifacts" / "research" / "run-1"
     research_dir.mkdir(parents=True, exist_ok=True)
     (research_dir / "research.md").write_text(short_duration_research, encoding="utf-8")
 
@@ -405,6 +405,8 @@ sfx_cues:
 
     # Verify short duration and scene count
     total_duration = sum(s["duration"] for s in manifest_content["scenes"])
-    assert 10 <= len(manifest_content["scenes"]) <= 16, f"Scene count {len(manifest_content['scenes'])} in valid range"
+    assert 4 <= len(manifest_content["scenes"]) <= 6, (
+        f"Scene count {len(manifest_content['scenes'])} should be appropriate for a short video"
+    )
     assert total_duration <= 90, f"Duration {total_duration}s appropriate for short video"
     assert result.passed, f"Scriptwriter should handle short duration and vertical format. Errors: {result.errors}"

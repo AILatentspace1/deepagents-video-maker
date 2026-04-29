@@ -26,8 +26,17 @@ uv run better-harness validate harness/video-maker-minimal.toml
 # Run baseline (1 iteration to test)
 uv run better-harness run harness/video-maker-minimal.toml --output-dir runs/baseline --max-iterations 1
 
-# Run full optimization loop
+# Run full optimization loop (cross-platform via Node.js)
+pnpm harness:run
+
+# Or manually with an explicit output directory
+uv run better-harness run harness/video-maker-minimal.toml --output-dir runs/my-run --max-iterations 5
+
+# POSIX shell (bash/zsh/sh)
 uv run better-harness run harness/video-maker-minimal.toml --output-dir runs/$(date +%Y%m%d-%H%M%S) --max-iterations 5
+
+# PowerShell (Windows)
+uv run better-harness run harness/video-maker-minimal.toml --output-dir "runs/$(Get-Date -Format 'yyyyMMdd-HHmmss')" --max-iterations 5
 ```
 
 ## Configuration

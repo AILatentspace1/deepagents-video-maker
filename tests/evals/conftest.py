@@ -1,5 +1,6 @@
 """Shared fixtures for eval tests."""
 
+import json
 import pytest
 from pathlib import Path
 
@@ -22,8 +23,35 @@ def pytest_addoption(parser):
 
 @pytest.fixture
 def model(request):
-    """Get model from command line."""
+    """Get model from indirect parametrization or command line."""
+    if hasattr(request, "param"):
+        return request.param
     return request.config.getoption("--model")
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Write eval summary JSON to --evals-report-file if specified."""
+    report_file = session.config.getoption("--evals-report-file", default=None)
+    if not report_file:
+        return
+
+    tr = session.config.pluginmanager.get_plugin("terminalreporter")
+    if tr:
+        passed = len(tr.stats.get("passed", []))
+        failed = len(tr.stats.get("failed", []))
+        error = len(tr.stats.get("error", []))
+    else:
+        passed = failed = error = 0
+
+    summary = {
+        "exit_status": int(exitstatus),
+        "passed": passed,
+        "failed": failed + error,
+        "total": passed + failed + error,
+    }
+
+    Path(report_file).parent.mkdir(parents=True, exist_ok=True)
+    Path(report_file).write_text(json.dumps(summary, indent=2), encoding="utf-8")
 
 
 @pytest.fixture
