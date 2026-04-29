@@ -214,6 +214,16 @@ def check_files() -> None:
             "Missing required files (run 'git status' to check checkout):\n"
             + "\n".join(f"  - {f}" for f in missing)
         )
+    empty = [
+        str(p.relative_to(PROJECT_ROOT))
+        for p in required_paths
+        if p.stat().st_size == 0
+    ]
+    if empty:
+        raise SystemExit(
+            "Required files are empty (re-run 'git checkout' or check LFS):\n"
+            + "\n".join(f"  - {f}" for f in empty)
+        )
     print("OK: deepagents-video-maker files are present.")
     print(f"  project root : {PROJECT_ROOT}")
     for p in required_paths:
