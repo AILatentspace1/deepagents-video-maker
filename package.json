@@ -5,6 +5,9 @@
   "scripts": {
     "ui:dev": "pnpm --filter deepagent-video-maker-ui dev",
     "agent:dev": "cd web-ui && uv run langgraph dev",
-    "test:py": "uv run pytest tests/deepagents_video_maker"
+    "test:py": "uv run pytest tests/deepagents_video_maker",
+    "test:evals": "uv run pytest tests/evals/ -v",
+    "harness:validate": "uv run better-harness validate harness/video-maker-minimal.toml",
+    "harness:run": "uv run better-harness run harness/video-maker-minimal.toml --output-dir runs/$(date +%Y%m%d-%H%M%S) --max-iterations 5"
   }
 }

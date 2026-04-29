@@ -1,0 +1,57 @@
+# Minimal better-harness config for video-maker scriptwriter optimization
+#
+# This config exposes only the scriptwriter prompt for autonomous optimization.
+# The outer Deep Agent will read eval failures and propose edits to improve
+# script generation quality.
+
+[experiment]
+name = "video-maker-scriptwriter-minimal"
+runner = "pytest"
+workspace_root = "/home/runner/work/deepagents-video-maker/deepagents-video-maker"
+model = "claude-sonnet-4-6"
+max_iterations = 5
+
+[better_agent]
+model = "claude-sonnet-4-6"
+max_turns = 30
+
+[runner.pytest]
+project_root = "/home/runner/work/deepagents-video-maker/deepagents-video-maker"
+model_flag = "--model"
+summary_flag = "--evals-report-file"
+pytest_args = ["-q", "tests/evals/"]
+
+# Single surface: scriptwriter prompt
+# The outer agent can edit this file to improve script generation
+[surfaces.scriptwriter_prompt]
+kind = "workspace_file"
+target = "skills/video-maker/agents/scriptwriter.md"
+filename = "scriptwriter.md"
+base_file = "skills/video-maker/agents/scriptwriter.md"
+
+# Train cases: visible to outer agent for optimization
+[[cases]]
+case_id = "tests/evals/test_script_train.py::test_scriptwriter_basic_structure[{model}]"
+split = "train"
+stratum = "structure"
+
+[[cases]]
+case_id = "tests/evals/test_script_train.py::test_scriptwriter_scene_count[{model}]"
+split = "train"
+stratum = "scene_quality"
+
+[[cases]]
+case_id = "tests/evals/test_script_train.py::test_scriptwriter_ratify_rules[{model}]"
+split = "train"
+stratum = "validation"
+
+# Holdout cases: used to prevent overfitting
+[[cases]]
+case_id = "tests/evals/test_script_holdout.py::test_scriptwriter_different_domain[{model}]"
+split = "holdout"
+stratum = "domain_transfer"
+
+[[cases]]
+case_id = "tests/evals/test_script_holdout.py::test_scriptwriter_short_duration[{model}]"
+split = "holdout"
+stratum = "edge_cases"
