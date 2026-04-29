@@ -135,8 +135,9 @@ def test_llm_scriptwriter_data_card_quality(tmp_path, llm_client, model, data_he
             f"data_card scene {i+1} data_semantic missing 'anchor_number' field:\n{block[:400]}"
         )
         items = re.findall(r"- \{.*?label.*?\}", block)
-        assert len(items) >= 1, (
-            f"data_card scene {i+1} data_semantic.items should have ≥1 entry. "
+        assert len(items) >= 3, (
+            f"data_card scene {i+1} data_semantic.items should have ≥3 entries "
+            f"(climate tech research has 6+ data points — use them!). "
             f"Found {len(items)}:\n{block[:400]}"
         )
 

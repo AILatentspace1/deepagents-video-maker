@@ -8,10 +8,14 @@
 name = "video-maker-scriptwriter-minimal"
 runner = "pytest"
 workspace_root = "."
-model = "claude-sonnet-4-6"
+# GLM-4.5-Air is a weaker model (ZhipuAI haiku-tier) that struggles with strict
+# structural requirements — this is intentional: it causes tests to fail so that
+# better-harness has something to optimize.
+model = "GLM-4.5-Air"
 max_iterations = 5
 
 [better_agent]
+# The optimizer itself uses the stronger model (claude-sonnet-4-6 / glm-5-turbo)
 model = "claude-sonnet-4-6"
 max_turns = 30
 
@@ -56,3 +60,19 @@ stratum = "structure"
 case_id = "tests/evals/test_script_llm_holdout.py::test_llm_scriptwriter_duration_compliance"
 split = "holdout"
 stratum = "scene_quality"
+
+# Stress cases: edge scenarios that expose prompt fragility
+[[cases]]
+case_id = "tests/evals/test_script_llm_stress.py::test_llm_scriptwriter_ultra_short"
+split = "train"
+stratum = "duration"
+
+[[cases]]
+case_id = "tests/evals/test_script_llm_stress.py::test_llm_scriptwriter_pure_narrative"
+split = "train"
+stratum = "content_type"
+
+[[cases]]
+case_id = "tests/evals/test_script_llm_stress.py::test_llm_scriptwriter_zh_en_mix"
+split = "holdout"
+stratum = "locale"

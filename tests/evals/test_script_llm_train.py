@@ -143,12 +143,15 @@ def test_llm_scriptwriter_passes_ratify(setup_session, llm_client, model):
 # ---------------------------------------------------------------------------
 
 def test_llm_scriptwriter_narrative_arc(setup_session, llm_client, model):
-    """LLM-generated script must have a complete hook → development → cta narrative arc.
+    """LLM-generated script must have a precise hook → climax → cta narrative arc.
 
     Success criteria:
     - At least one scene with narrative_role: hook
+    - At least one scene with narrative_role: climax  (explicitly required)
     - At least one scene with narrative_role: cta
-    - At least two scenes with narrative_role in {development, setup, climax}
+    - ORDER enforced: first hook index < first climax index < first cta-from-end index
+    - At least two scenes with narrative_role in {development, setup}
+    - cta must appear within the last 3 scenes
     """
     goal = setup_session["goal"]
     state = setup_session["state"]
@@ -163,21 +166,45 @@ def test_llm_scriptwriter_narrative_arc(setup_session, llm_client, model):
 
     script_text = (run_dir / "script.md").read_text(encoding="utf-8")
 
-    # Extract all narrative_role values
+    # Extract all narrative_role values in document order
     roles = re.findall(r"narrative_role:\s*(\w+)", script_text)
     role_set = set(roles)
 
+    # 1. Required roles
     assert "hook" in role_set, (
         f"Script must have at least one 'hook' scene. Found roles: {sorted(role_set)}"
+    )
+    assert "climax" in role_set, (
+        f"Script must have at least one 'climax' scene (explicitly required, not just development). "
+        f"Found roles: {sorted(role_set)}"
     )
     assert "cta" in role_set, (
         f"Script must have at least one 'cta' scene. Found roles: {sorted(role_set)}"
     )
-    middle_roles = {"development", "setup", "climax"}
-    middle_count = sum(1 for r in roles if r in middle_roles)
-    assert middle_count >= 2, (
-        f"Script must have ≥2 development/setup/climax scenes. "
-        f"Found {middle_count}. All roles: {roles}"
+
+    # 2. ORDER: hook < climax < cta
+    hook_idx = next(i for i, r in enumerate(roles) if r == "hook")
+    climax_idx = next(i for i, r in enumerate(roles) if r == "climax")
+    cta_idx = next(i for i, r in enumerate(reversed(roles)) if r == "cta")
+    cta_idx = len(roles) - 1 - cta_idx
+    assert hook_idx < climax_idx, (
+        f"hook (pos {hook_idx}) must precede climax (pos {climax_idx}) in role sequence: {roles}"
+    )
+    assert climax_idx < cta_idx, (
+        f"climax (pos {climax_idx}) must precede cta (pos {cta_idx}) in role sequence: {roles}"
+    )
+
+    # 3. cta must appear within the last 3 roles
+    assert cta_idx >= len(roles) - 3, (
+        f"cta must be among the last 3 narrative_role entries (got pos {cta_idx} of {len(roles)}). "
+        f"Full sequence: {roles}"
+    )
+
+    # 4. Middle content: at least 2 development or setup scenes
+    dev_count = sum(1 for r in roles if r in {"development", "setup"})
+    assert dev_count >= 2, (
+        f"Script must have ≥2 development/setup scenes (the body). "
+        f"Found {dev_count}. All roles: {roles}"
     )
 
 
@@ -215,8 +242,33 @@ def test_llm_scriptwriter_style_spine(setup_session, llm_client, model):
     missing = [f for f in required_fields if f not in spine]
     assert not missing, f"style_spine is missing required fields: {missing}\n\nspine content:\n{spine}"
 
-    # glossary must be a non-empty list
+    # lut_style must match research section 6 recommendation (tech_cool for AI/tech topic)
+    lut_match = re.search(r"lut_style:\s*(\S+)", spine)
+    assert lut_match, "style_spine must contain lut_style field"
+    lut_value = lut_match.group(1).rstrip(",").strip()
+    assert lut_value == "tech_cool", (
+        f"lut_style must be 'tech_cool' as recommended in research §6 for AI/tech topics. "
+        f"Got: '{lut_value}'\n\nspine:\n{spine}"
+    )
+
+    # tone must contain both 'professional' and 'confident' (from research §6)
+    tone_match = re.search(r"tone:\s*(.+)", spine)
+    assert tone_match, "style_spine must contain tone field"
+    tone_value = tone_match.group(1).lower()
+    assert "professional" in tone_value, (
+        f"tone must include 'professional' (research §6 says: 'professional, confident'). "
+        f"Got: '{tone_value}'"
+    )
+    assert "confident" in tone_value, (
+        f"tone must include 'confident' (research §6 says: 'professional, confident'). "
+        f"Got: '{tone_value}'"
+    )
+
+    # glossary must be a non-empty list with ≥3 domain-specific terms
     glossary_match = re.search(r"glossary:\s*\[(.+?)\]", spine)
     assert glossary_match, "style_spine.glossary must be a YAML list like: glossary: [Term1, Term2]"
     glossary_items = [item.strip() for item in glossary_match.group(1).split(",") if item.strip()]
-    assert len(glossary_items) >= 1, f"glossary must have at least 1 term, got: {glossary_match.group(1)}"
+    assert len(glossary_items) >= 3, (
+        f"glossary must have ≥3 domain-specific terms to help Whisper ASR. "
+        f"Got {len(glossary_items)}: {glossary_items}"
+    )
