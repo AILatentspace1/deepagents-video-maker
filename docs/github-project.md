@@ -38,6 +38,8 @@ gh label create "type: bug" --color d73a4a --description "Something is broken or
 gh label create "type: feature" --color a2eeef --description "New behavior or capability." --force
 gh label create "type: task" --color cfd3d7 --description "Implementation, cleanup, or tracking work." --force
 gh label create "type: docs" --color 0075ca --description "Documentation-only work." --force
+gh label create "good first issue" --color 7057ff --description "Good for first-time contributors." --force
+gh label create "help wanted" --color 008672 --description "Maintainers welcome external contribution." --force
 gh label create "status: triage" --color fbca04 --description "Needs prioritization and scope confirmation." --force
 gh label create "status: ready" --color 0e8a16 --description "Ready for implementation." --force
 gh label create "status: blocked" --color b60205 --description "Blocked by dependency, decision, or credentials." --force
@@ -62,6 +64,22 @@ gh label create "area: ci" --color 0e8a16 --description "GitHub Actions and auto
   - one `priority:*` label,
   - a milestone when it belongs to M1/M2/M3.
 - Keep acceptance criteria explicit and command-based.
+
+## New contributor discovery
+
+Use GitHub's standard `good first issue` label only for small, well-scoped issues that a first-time contributor can complete without deep project context.
+
+A `good first issue` should include:
+
+- exact files or directories to inspect,
+- a recommended implementation path,
+- examples or nearby tests to copy,
+- validation commands,
+- explicit non-goals.
+
+Add `help wanted` when external contribution is welcome and maintainers are ready to review quickly.
+
+Avoid using `good first issue` for broad orchestration, HITL, model behavior, or architecture-boundary tasks until they are split into smaller issues.
 
 ## Project automation
 
