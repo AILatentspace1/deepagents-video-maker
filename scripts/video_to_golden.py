@@ -76,7 +76,13 @@ def _check_ytdlp() -> bool:
         return False
 
 
-def download_youtube_video(url: str, out_dir: Path, proxy: str | None = None) -> Path:
+def download_youtube_video(
+    url: str,
+    out_dir: Path,
+    proxy: str | None = None,
+    cookies: str | None = None,
+    cookies_from_browser: str | None = None,
+) -> Path:
     """用 yt-dlp 下载 YouTube 视频，返回下载后的 mp4 路径。"""
     out_dir.mkdir(parents=True, exist_ok=True)
     output_tmpl = str(out_dir / "%(title).80s [%(id)s].%(ext)s")
@@ -92,6 +98,10 @@ def download_youtube_video(url: str, out_dir: Path, proxy: str | None = None) ->
     ]
     if proxy:
         cmd += ["--proxy", proxy]
+    if cookies:
+        cmd += ["--cookies", cookies]
+    if cookies_from_browser:
+        cmd += ["--cookies-from-browser", cookies_from_browser]
 
     print(f"[INFO] yt-dlp 下载: {url}")
     result = subprocess.run(cmd, text=True, encoding="utf-8", errors="replace")
@@ -652,11 +662,18 @@ def main() -> None:
     parser.add_argument("--aspect-ratio", default="16:9", dest="aspect_ratio")
     parser.add_argument("--golden-dir", type=Path, default=Path("tests/evals/fixtures"),
                         dest="golden_dir")
+    parser.add_argument("--yt-dir", type=Path, default=Path("yt_videos"),
+                        dest="yt_dir",
+                        help="YouTube 视频下载目录 [默认: yt_videos]")
     parser.add_argument("--harness-toml", type=Path,
                         default=Path("harness/video-maker-minimal.toml"),
                         dest="harness_toml")
     parser.add_argument("--proxy", default=None,
                         help="HTTP 代理（默认读 HTTP_PROXY 环境变量，如 http://127.0.0.1:7897）")
+    parser.add_argument("--cookies", default=None,
+                        help="yt-dlp cookies 文件路径（Netscape 格式，用于 YouTube 认证）")
+    parser.add_argument("--cookies-from-browser", default=None, dest="cookies_from_browser",
+                        help="从浏览器读取 cookies（如 chrome、edge、firefox）")
     args = parser.parse_args()
 
     _load_dot_env()
@@ -670,8 +687,12 @@ def main() -> None:
             print("[ERROR] 未找到 yt-dlp，请先安装: pip install yt-dlp 或 uv add yt-dlp")
             sys.exit(1)
         print(f"[INFO] 检测到 YouTube URL，开始下载...")
-        dl_dir = args.golden_dir / "_downloads"
-        video_path = download_youtube_video(args.video, dl_dir, proxy)
+        dl_dir = args.yt_dir
+        video_path = download_youtube_video(
+            args.video, dl_dir, proxy,
+            cookies=args.cookies,
+            cookies_from_browser=args.cookies_from_browser,
+        )
         print(f"[OK]  下载完成: {video_path}")
     else:
         video_path = Path(args.video).resolve()

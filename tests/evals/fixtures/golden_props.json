@@ -1,0 +1,23 @@
+{
+  "scene_count": 8,
+  "scene_count_min": 4,
+  "scene_count_max": 12,
+  "total_duration": 350,
+  "duration_min": 210,
+  "duration_max": 525,
+  "max_single_scene": 55,
+  "data_card_count": 1,
+  "data_card_ratio": 0.12,
+  "data_card_ratio_min": 0.02,
+  "has_hook": true,
+  "has_climax": true,
+  "has_cta": true,
+  "has_style_spine": true,
+  "has_audio_design": true,
+  "has_glossary": false,
+  "type_counts": {
+    "narration": 6,
+    "data_card": 1,
+    "quote_card": 1
+  }
+}
