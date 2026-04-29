@@ -66,7 +66,7 @@ Both files must be present for the script gate to pass.
 | Scene manifest | `output/<session>/artifacts/script/run-<n>/manifest.json` | Yes |
 
 Validation rules (`ratify_script`):
-- Both files must exist and be readable.
+- Both files must exist.
 - Script must contain **≥ 1 `## Scene …` block**.
 - `manifest.json` must be a valid JSON object with a non-empty `"scenes"` array.
 - Every scene object must include `id`, `narration`, and `duration` (positive number).
