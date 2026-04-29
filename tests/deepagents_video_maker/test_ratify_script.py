@@ -96,3 +96,25 @@ def test_ratify_script_fails_when_scene_uses_layer_hint(tmp_path):
     manifest.write_text(json.dumps({"scenes": [{"id": "s1", "narration": "x", "duration": 5}]}), encoding="utf-8")
     result = ratify_script(script, manifest)
     assert not result.passed
+
+
+def test_ratify_script_fails_when_manifest_missing(tmp_path):
+    script = _write_script(tmp_path)
+    result = ratify_script(script, tmp_path / "missing_manifest.json")
+    assert not result.passed
+    assert any("manifest_exists" == c.id and not c.passed for c in result.checks)
+
+
+def test_ratify_script_fails_when_scene_ids_duplicate(tmp_path):
+    script = _write_script(tmp_path, scene_count=2)
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(
+        json.dumps({"scenes": [
+            {"id": "scene-dup", "narration": "a", "duration": 5},
+            {"id": "scene-dup", "narration": "b", "duration": 5},
+        ]}),
+        encoding="utf-8",
+    )
+    result = ratify_script(script, manifest)
+    assert not result.passed
+    assert any(c.id == "scene_ids_unique" and not c.passed for c in result.checks)
