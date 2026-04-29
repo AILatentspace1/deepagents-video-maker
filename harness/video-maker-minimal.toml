@@ -16,42 +16,43 @@ model = "claude-sonnet-4-6"
 max_turns = 30
 
 [runner.pytest]
-project_root = "."
+project_root = ".."
+uv_group = "dev"
 model_flag = "--model"
 summary_flag = "--evals-report-file"
-pytest_args = ["-q", "tests/evals/"]
+pytest_args = ["-q"]
 
 # Single surface: scriptwriter prompt
 # The outer agent can edit this file to improve script generation
 [surfaces.scriptwriter_prompt]
 kind = "workspace_file"
-target = "skills/video-maker/agents/scriptwriter.md"
+target = "../skills/video-maker/agents/scriptwriter.md"
 filename = "scriptwriter.md"
-base_file = "skills/video-maker/agents/scriptwriter.md"
+base_file = "../skills/video-maker/agents/scriptwriter.md"
 
-# Train cases: visible to outer agent for optimization
+# Train cases: LLM-based — these actually invoke the model and measure output quality
 [[cases]]
-case_id = "tests/evals/test_script_train.py::test_scriptwriter_basic_structure[{model}]"
+case_id = "tests/evals/test_script_llm_train.py::test_llm_scriptwriter_passes_ratify"
 split = "train"
 stratum = "structure"
 
 [[cases]]
-case_id = "tests/evals/test_script_train.py::test_scriptwriter_scene_count[{model}]"
+case_id = "tests/evals/test_script_llm_train.py::test_llm_scriptwriter_narrative_arc"
 split = "train"
 stratum = "scene_quality"
 
 [[cases]]
-case_id = "tests/evals/test_script_train.py::test_scriptwriter_ratify_rules[{model}]"
+case_id = "tests/evals/test_script_llm_train.py::test_llm_scriptwriter_style_spine"
 split = "train"
-stratum = "validation"
+stratum = "structure"
 
-# Holdout cases: used to prevent overfitting
+# Holdout cases: different domains and edge cases to prevent overfitting
 [[cases]]
-case_id = "tests/evals/test_script_holdout.py::test_scriptwriter_different_domain[{model}]"
+case_id = "tests/evals/test_script_llm_holdout.py::test_llm_scriptwriter_data_card_quality"
 split = "holdout"
-stratum = "domain_transfer"
+stratum = "structure"
 
 [[cases]]
-case_id = "tests/evals/test_script_holdout.py::test_scriptwriter_short_duration[{model}]"
+case_id = "tests/evals/test_script_llm_holdout.py::test_llm_scriptwriter_duration_compliance"
 split = "holdout"
-stratum = "edge_cases"
+stratum = "scene_quality"
