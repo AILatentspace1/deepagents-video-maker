@@ -1,0 +1,31 @@
+name: Task
+description: Track implementation, cleanup, or project-management work.
+title: "task: "
+labels: ["type: task", "status: triage"]
+assignees:
+  - AILatentspace1
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: What should be true when this is done?
+    validations:
+      required: true
+  - type: textarea
+    id: checklist
+    attributes:
+      label: Checklist
+      value: |
+        - [ ] 
+        - [ ] 
+        - [ ] 
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation
+      value: |
+        - [ ] `uv run pytest tests/deepagents_video_maker -q`
+        - [ ] `uv run python scripts/deepagents_video_maker.py --check`

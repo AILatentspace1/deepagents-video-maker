@@ -1,0 +1,45 @@
+name: Feature request
+description: Propose a repo feature or milestone task.
+title: "feat: "
+labels: ["type: feature", "status: triage"]
+assignees:
+  - AILatentspace1
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / goal
+      description: What user or developer problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Proposed scope
+      description: Include likely files/modules and explicit non-goals.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - area: producer
+        - area: tools
+        - area: skills
+        - area: web-ui
+        - area: testing
+        - area: docs
+        - area: ci
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      value: |
+        - [ ] Implementation is covered by tests or a deterministic smoke check.
+        - [ ] `uv run pytest tests/deepagents_video_maker -q` passes.
+        - [ ] Docs/AGENTS/README are updated if commands or workflow changed.
+    validations:
+      required: true
