@@ -1,7 +1,7 @@
 {
   "name": "deepagents-video-maker",
   "private": true,
-  "packageManager": "pnpm@9",
+  "packageManager": "pnpm@9.15.0",
   "scripts": {
     "ui:dev": "pnpm --filter deepagent-video-maker-ui dev",
     "agent:dev": "cd web-ui && uv run langgraph dev",

@@ -43,14 +43,24 @@ export function useChat({
     reconnectOnMount: true,
     threadId: threadId ?? null,
     onThreadId: setThreadId,
-    defaultHeaders: { "x-auth-scheme": "langsmith" },
+    // Local `langgraph dev` uses noop auth; LangSmith deployments use langsmith.
+    // Sending the header to local dev can cause confusing failures.
+    defaultHeaders:
+      activeAssistant?.assistant_id &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        activeAssistant.assistant_id
+      )
+        ? { "x-auth-scheme": "langsmith" }
+        : undefined,
     // Enable fetching state history when switching to existing threads
     fetchStateHistory: true,
     // Revalidate thread list when stream finishes, errors, or creates new thread
     onFinish: onHistoryRevalidate,
     onError: onHistoryRevalidate,
     onCreated: onHistoryRevalidate,
-    experimental_thread: thread,
+    // Keep compatibility across @langchain/langgraph-sdk versions.
+    // Some releases exposed this as an experimental option; others removed it.
+    ...(thread ? ({ experimental_thread: thread } as any) : {}),
   });
 
   const sendMessage = useCallback(

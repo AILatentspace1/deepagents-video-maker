@@ -6,7 +6,7 @@ DeepAgents-native video-maker orchestrator. Current runnable pipeline: **researc
 
 ```bash
 # Python env
-uv sync
+uv sync  # requires `uv` installed (see below)
 
 # Node packages
 pnpm install
@@ -17,6 +17,13 @@ pnpm test:py
 # Start LangGraph dev server
 pnpm agent:dev
 ```
+
+### Prerequisites
+
+- `uv` (Python package manager)
+  - If `uv` is not installed, `python -m pip install uv` is sufficient for dev.
+- `pnpm` (Node package manager)
+  - If `pnpm` is not installed, `corepack enable` will provide it.
 
 ## Architecture
 
