@@ -2,6 +2,20 @@
 
 This repository uses GitHub Issues as the source of truth for task tracking.
 
+## First-time contributor notes
+
+- Prefer `uv run ...` for Python commands (instead of bare `python`/`pytest`).
+- Prefer `pnpm ...` for Node commands.
+
+Quick local validation commands:
+
+```bash
+uv sync
+pnpm install
+uv run pytest tests/deepagents_video_maker -q
+uv run python scripts/deepagents_video_maker.py --check
+```
+
 ## Recommended Project
 
 Create a GitHub Project named **deepagents-video-maker** and add this repository as the linked source.

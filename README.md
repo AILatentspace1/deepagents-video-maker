@@ -8,15 +8,38 @@ DeepAgents-native video-maker orchestrator. Current runnable pipeline: **researc
 # Python env
 uv sync
 
+# Note: run Python commands via `uv run ...`
+
 # Node packages
 pnpm install
+
+# Note: run Node commands via `pnpm ...`
 
 # Run tests
 pnpm test:py
 
+# Or (canonical):
+uv run pytest tests/deepagents_video_maker -q
+
+# Repo sanity check
+uv run python scripts/deepagents_video_maker.py --check
+
 # Start LangGraph dev server
 pnpm agent:dev
 ```
+
+## Contributing (first-time setup)
+
+If you're new to the repo, the fastest path to a green local validation run is:
+
+```bash
+uv sync
+pnpm install
+uv run pytest tests/deepagents_video_maker -q
+uv run python scripts/deepagents_video_maker.py --check
+```
+
+For project/issue workflow conventions, see `docs/github-project.md`.
 
 ## Architecture
 
