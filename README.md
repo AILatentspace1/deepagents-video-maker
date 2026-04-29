@@ -39,3 +39,7 @@ tests/                        # pytest unit tests
 ## Design Docs
 
 See `docs/design/` for architecture and plan documents.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for first-time setup, validation commands, and contribution guidelines.

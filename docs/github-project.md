@@ -81,6 +81,8 @@ Add `help wanted` when external contribution is welcome and maintainers are read
 
 Avoid using `good first issue` for broad orchestration, HITL, model behavior, or architecture-boundary tasks until they are split into smaller issues.
 
+For first-time contributor setup steps and validation commands, see [CONTRIBUTING.md](../CONTRIBUTING.md).
+
 ## Project automation
 
 Recommended GitHub Project workflows:
