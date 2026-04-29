@@ -57,3 +57,8 @@ export interface ToolApprovalInterruptData {
   action_requests: ActionRequest[];
   review_configs?: ReviewConfig[];
 }
+
+export interface ThinkingBlock {
+  /** Raw reasoning text from Anthropic extended thinking content block */
+  thinking: string;
+}

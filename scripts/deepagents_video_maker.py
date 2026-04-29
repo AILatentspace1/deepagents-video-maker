@@ -56,12 +56,18 @@ def resolve_model(model: Any) -> Any:
         if not api_key:
             raise RuntimeError("anthropic: model requires ANTHROPIC_AUTH_TOKEN or ANTHROPIC_API_KEY.")
         base_url = os.environ.get("ANTHROPIC_BASE_URL") or "https://api.anthropic.com"
+        extra_kwargs: dict[str, Any] = {}
+        thinking_env = os.environ.get("ANTHROPIC_EXTENDED_THINKING", "false").strip().lower()
+        if thinking_env in ("true", "1", "enabled"):
+            budget = int(os.environ.get("ANTHROPIC_THINKING_BUDGET_TOKENS", "8000"))
+            extra_kwargs["thinking"] = {"type": "enabled", "budget_tokens": budget}
         return ChatAnthropic(
             model=model_name,
             api_key=api_key,
             base_url=base_url,
             max_retries=5,
             timeout=120,
+            **extra_kwargs,
         )
 
     # --- DeepSeek OpenAI-compatible route ---

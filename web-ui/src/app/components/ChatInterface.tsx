@@ -313,6 +313,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(({ assistant }) => {
                     message={data.message}
                     toolCalls={data.toolCalls}
                     isLoading={isLoading}
+                    isStreaming={isLoading && isLastMessage && data.message.type === "ai"}
                     actionRequestsMap={
                       isLastMessage ? actionRequestsMap : undefined
                     }

@@ -38,12 +38,15 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(
     onResume,
     isLoading,
   }) => {
+    // Only auto-expand for pending approval or custom UI; collapse completed/pending tool calls
     const [isExpanded, setIsExpanded] = useState(
       () => !!uiComponent || !!actionRequest
     );
     const [expandedArgs, setExpandedArgs] = useState<Record<string, boolean>>(
       {}
     );
+    const [showFullResult, setShowFullResult] = useState(false);
+    const RESULT_LIMIT = 300;
 
     const { name, args, result, status } = useMemo(() => {
       return {
@@ -206,18 +209,37 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(
                     </div>
                   </div>
                 )}
-                {result && (
-                  <div className="mt-4">
-                    <h4 className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Result
-                    </h4>
-                    <pre className="m-0 overflow-x-auto whitespace-pre-wrap break-all rounded-sm border border-border bg-muted/40 p-2 font-mono text-xs leading-7 text-foreground">
-                      {typeof result === "string"
-                        ? result
-                        : JSON.stringify(result, null, 2)}
-                    </pre>
-                  </div>
-                )}
+                {result && (() => {
+                  const resultStr =
+                    typeof result === "string"
+                      ? result
+                      : JSON.stringify(result, null, 2);
+                  const isTruncated = resultStr.length > RESULT_LIMIT;
+                  const displayText = showFullResult
+                    ? resultStr
+                    : resultStr.slice(0, RESULT_LIMIT);
+                  return (
+                    <div className="mt-4">
+                      <h4 className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Result
+                      </h4>
+                      <pre className="m-0 overflow-x-auto whitespace-pre-wrap break-all rounded-sm border border-border bg-muted/40 p-2 font-mono text-xs leading-7 text-foreground">
+                        {displayText}
+                        {isTruncated && !showFullResult && "\u2026"}
+                      </pre>
+                      {isTruncated && (
+                        <button
+                          onClick={() => setShowFullResult((v) => !v)}
+                          className="mt-1 text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                        >
+                          {showFullResult
+                            ? "Show less"
+                            : `Show more (${resultStr.length - RESULT_LIMIT} more chars)`}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
               </>
             )}
           </div>

@@ -1,6 +1,7 @@
 import { Message } from "@langchain/langgraph-sdk";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import type { ThinkingBlock } from "@/app/types/types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -154,4 +155,23 @@ export function formatMessageForLLM(message: Message): string {
 export function formatConversationForLLM(messages: Message[]): string {
   const formattedMessages = messages.map(formatMessageForLLM);
   return formattedMessages.join("\n\n---\n\n");
+}
+
+/**
+ * Extract Anthropic extended-thinking content blocks from a message.
+ * Anthropic returns thinking blocks as { type: "thinking", thinking: "..." }.
+ */
+export function extractThinkingBlocks(message: Message): ThinkingBlock[] {
+  if (!Array.isArray(message.content)) return [];
+  return (message.content as unknown[])
+    .filter(
+      (c): c is { type: "thinking"; thinking: string } =>
+        typeof c === "object" &&
+        c !== null &&
+        "type" in c &&
+        (c as Record<string, unknown>).type === "thinking" &&
+        "thinking" in c &&
+        typeof (c as Record<string, unknown>).thinking === "string"
+    )
+    .map((c) => ({ thinking: c.thinking }));
 }
