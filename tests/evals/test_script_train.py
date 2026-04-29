@@ -11,7 +11,6 @@ from deepagents_video_maker.script_flow import (
     start_script_milestone,
 )
 from deepagents_video_maker.session import init_video_session
-from deepagents_video_maker.state_store import save_state_yaml
 
 
 @pytest.fixture
@@ -39,12 +38,9 @@ def setup_session(tmp_path, sample_research_content):
     research_dir.mkdir(parents=True, exist_ok=True)
     (research_dir / "research.md").write_text(sample_research_content, encoding="utf-8")
 
-    save_state_yaml(state, tmp_path / "state.yaml")
-
     return {"goal": goal, "state": state, "output_dir": tmp_path}
 
 
-@pytest.mark.parametrize("model", ["claude-sonnet-4-6"], indirect=True)
 def test_scriptwriter_basic_structure(setup_session, model):
     """Train case 1: Scriptwriter generates valid script with required structure.
 
@@ -162,11 +158,10 @@ sfx_cues:
     # Ratify
     result = ratify_and_update_script(state, goal)
 
-    assert result.passed, f"Scriptwriter should generate valid script structure. Errors: {result.errors}"
+    assert result.passed, f"Scriptwriter should generate valid script structure. Issues: {result.issues}"
     assert state.milestone("script").status == MilestoneStatus.COMPLETED
 
 
-@pytest.mark.parametrize("model", ["claude-sonnet-4-6"], indirect=True)
 def test_scriptwriter_scene_count(setup_session, model):
     """Train case 2: Script has appropriate number of scenes for 1-3min duration.
 
@@ -237,10 +232,9 @@ sfx_cues: []
     total_duration = sum(s["duration"] for s in manifest_scenes)
     assert 10 <= len(manifest_scenes) <= 16, f"Scene count {len(manifest_scenes)} should be 10-16 for 1-3min video"
     assert 60 <= total_duration <= 180, f"Total duration {total_duration}s should be 60-180s for 1-3min video"
-    assert result.passed, f"Script with proper scene count should pass. Errors: {result.errors}"
+    assert result.passed, f"Script with proper scene count should pass. Issues: {result.issues}"
 
 
-@pytest.mark.parametrize("model", ["claude-sonnet-4-6"], indirect=True)
 def test_scriptwriter_ratify_rules(setup_session, model):
     """Train case 3: Script passes all ratify_script validation rules.
 
@@ -383,5 +377,5 @@ sfx_cues:
 
     result = ratify_and_update_script(state, goal)
 
-    assert result.passed, f"Fully compliant script should pass all validation rules. Errors: {result.errors}"
-    assert len(result.errors) == 0, "Should have no validation errors"
+    assert result.passed, f"Fully compliant script should pass all validation rules. Issues: {result.issues}"
+    assert len(result.issues) == 0, "Should have no validation issues"

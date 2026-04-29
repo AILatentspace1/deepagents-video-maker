@@ -14,7 +14,6 @@ from deepagents_video_maker.script_flow import (
     start_script_milestone,
 )
 from deepagents_video_maker.session import init_video_session
-from deepagents_video_maker.state_store import save_state_yaml
 
 
 @pytest.fixture
@@ -80,8 +79,6 @@ def setup_storytelling_session(tmp_path, storytelling_research):
     research_dir.mkdir(parents=True, exist_ok=True)
     (research_dir / "research.md").write_text(storytelling_research, encoding="utf-8")
 
-    save_state_yaml(state, tmp_path / "state.yaml")
-
     return {"goal": goal, "state": state, "output_dir": tmp_path}
 
 
@@ -146,12 +143,9 @@ def setup_short_session(tmp_path, short_duration_research):
     research_dir.mkdir(parents=True, exist_ok=True)
     (research_dir / "research.md").write_text(short_duration_research, encoding="utf-8")
 
-    save_state_yaml(state, tmp_path / "state.yaml")
-
     return {"goal": goal, "state": state, "output_dir": tmp_path}
 
 
-@pytest.mark.parametrize("model", ["claude-sonnet-4-6"], indirect=True)
 def test_scriptwriter_different_domain(setup_storytelling_session, model):
     """Holdout case 1: Storytelling domain (history) vs tech domain.
 
@@ -274,10 +268,9 @@ sfx_cues:
 
     result = ratify_and_update_script(state, goal)
 
-    assert result.passed, f"Scriptwriter should handle different domain (history/storytelling). Errors: {result.errors}"
+    assert result.passed, f"Scriptwriter should handle different domain (history/storytelling). Issues: {result.issues}"
 
 
-@pytest.mark.parametrize("model", ["claude-sonnet-4-6"], indirect=True)
 def test_scriptwriter_short_duration(setup_short_session, model):
     """Holdout case 2: Very short duration (1min) with vertical format.
 
@@ -409,4 +402,4 @@ sfx_cues:
         f"Scene count {len(manifest_content['scenes'])} should be appropriate for a short video"
     )
     assert total_duration <= 90, f"Duration {total_duration}s appropriate for short video"
-    assert result.passed, f"Scriptwriter should handle short duration and vertical format. Errors: {result.errors}"
+    assert result.passed, f"Scriptwriter should handle short duration and vertical format. Issues: {result.issues}"
