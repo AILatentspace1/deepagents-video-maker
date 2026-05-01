@@ -144,3 +144,25 @@ class VideoMakerState:
             if item.id == milestone_id:
                 return item
         raise KeyError(f"unknown milestone: {milestone_id}")
+
+
+@dataclass(slots=True)
+class EvalSample:
+    """A single (script, score, suggestions) training data entry produced by the GAN Evaluator.
+
+    Accumulated during Phase 1 inference-time iteration; used as training data
+    for Phase 2 Generator fine-tuning and Phase 3 Evaluator fine-tuning.
+    """
+
+    session_id: str
+    topic: str
+    style: str
+    duration: str
+    eval_round: int
+    script_text: str
+    eval_score: float
+    eval_pass: bool
+    dimensions: list[dict[str, Any]] = field(default_factory=list)
+    iteration_fixes: list[dict[str, Any]] = field(default_factory=list)
+    contract_violations: list[dict[str, Any]] = field(default_factory=list)
+    timestamp: str = field(default_factory=lambda: datetime.now().isoformat(timespec="seconds"))
