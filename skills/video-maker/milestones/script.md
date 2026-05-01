@@ -147,6 +147,30 @@ WHILE round < 2:
 IF round >= 2 AND NOT pass:
   记录 "Script eval budget exhausted (best score: {best_score}), proceeding with best version"
   恢复 best_script（如果当前不是最优）
+
+**Phase 6 — 记录训练数据**
+
+无论评估是否通过，在迭代循环结束后调用 `vm_record_eval_sample`，将本轮评估结果写入训练数据集。
+
+```
+vm_record_eval_sample(
+  output_dir    = {output_dir},
+  session_id    = {output_dir} 路径中的时间戳-slug 部分（如 "20260501-120000-video-topic"），
+  topic         = goal.yaml.topic,
+  style         = goal.yaml.style,
+  duration      = goal.yaml.duration,
+  eval_round    = round,
+  script_text   = best_script 内容（字符串），
+  eval_score    = best_score,
+  eval_pass     = evaluator_result.pass,
+  dimensions    = evaluator_result.dimensions,
+  iteration_fixes     = evaluator_result.iteration_fixes,
+  contract_violations = evaluator_result.contract_violations,
+)
+```
+
+样本写入 `{output_dir}/training/eval-samples.jsonl`（追加模式）。
+此数据将在生产中积累，用于 Phase 2 Generator SFT / DPO 和 Phase 3 Evaluator fine-tuning。
 ```
 
 ### 当 eval_mode != "gan"（legacy 模式）

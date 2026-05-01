@@ -26,6 +26,8 @@ from .script_flow import (
     start_script_milestone,
 )
 from .state_store import load_goal_yaml, load_state_yaml, save_state_yaml
+from .models import EvalSample
+from .training_data import append_eval_sample
 
 
 try:  # pragma: no cover - depends on optional runtime package
@@ -299,6 +301,44 @@ def vm_ratify_script(
     return {"result": to_jsonable(result), "state": to_jsonable(state)}
 
 
+@_tool
+def vm_record_eval_sample(
+    output_dir: str,
+    session_id: str,
+    topic: str,
+    style: str,
+    duration: str,
+    eval_round: int,
+    script_text: str,
+    eval_score: float,
+    eval_pass: bool,
+    dimensions: list[dict] | None = None,
+    iteration_fixes: list[dict] | None = None,
+    contract_violations: list[dict] | None = None,
+) -> dict[str, Any]:
+    """Record a (script, score, suggestions) triplet as a training data sample.
+
+    Call this after each GAN Evaluator round in the Script milestone to
+    accumulate data for future Generator / Evaluator fine-tuning (Phase 2+).
+    The sample is appended to ``{output_dir}/training/eval-samples.jsonl``.
+    """
+    sample = EvalSample(
+        session_id=session_id,
+        topic=topic,
+        style=style,
+        duration=duration,
+        eval_round=eval_round,
+        script_text=script_text,
+        eval_score=float(eval_score),
+        eval_pass=bool(eval_pass),
+        dimensions=dimensions or [],
+        iteration_fixes=iteration_fixes or [],
+        contract_violations=contract_violations or [],
+    )
+    path = append_eval_sample(output_dir, sample)
+    return {"recorded": True, "path": str(path)}
+
+
 def build_langchain_tools() -> list[Any]:
     """Return LangChain-compatible native tools."""
 
@@ -312,6 +352,7 @@ def build_langchain_tools() -> list[Any]:
         vm_start_script,
         vm_build_scriptwriter_task,
         vm_ratify_script,
+        vm_record_eval_sample,
     ]
 
 
