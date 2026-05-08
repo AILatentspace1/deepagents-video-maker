@@ -23,6 +23,7 @@ from .build_render_flow import (
 from .source_flow import start_source_intake_milestone, ratify_and_update_source_intake
 from .script_flow import build_scriptwriter_task_description, ratify_and_update_script, start_script_milestone
 from .state_store import load_goal_yaml, load_state_yaml, save_state_yaml
+from .ui_state import build_video_maker_ui_state_from_state, build_video_maker_ui_state
 
 try:  # pragma: no cover - depends on optional runtime package
     from langchain_core.tools import tool as _tool
@@ -76,14 +77,17 @@ def vm_init_video_session(
         transition_style=transition_style,
     )
     state = init_video_session(goal, _resolve_project_root(root_dir), timestamp=timestamp)
-    return {"goal": to_jsonable(goal), "state": to_jsonable(state), "output_dir": state.output_dir}
+    return _with_ui_state(
+        {"goal": to_jsonable(goal), "state": to_jsonable(state), "output_dir": state.output_dir},
+        state=state,
+    )
 
 
 @_tool
 def vm_load_state(output_dir: str) -> dict[str, Any]:
     """Load state.yaml from an existing video-maker-v2 output directory."""
     state = load_state_yaml(Path(output_dir) / "state.yaml")
-    return {"state": to_jsonable(state), "output_dir": output_dir}
+    return _with_ui_state({"state": to_jsonable(state), "output_dir": output_dir}, state=state)
 
 
 @_tool
@@ -93,7 +97,7 @@ def vm_start_source_intake(output_dir: str) -> dict[str, Any]:
     state = load_state_yaml(state_path)
     run = start_source_intake_milestone(state)
     save_state_yaml(state, state_path)
-    return {"state": to_jsonable(state), "run": to_jsonable(run)}
+    return _with_ui_state({"state": to_jsonable(state), "run": to_jsonable(run)}, state=state)
 
 
 @_tool
@@ -134,7 +138,7 @@ def vm_ratify_source_intake(
     state = load_state_yaml(state_path)
     result = ratify_and_update_source_intake(state, goal)
     save_state_yaml(state, state_path)
-    return {"result": to_jsonable(result), "state": to_jsonable(state)}
+    return _with_ui_state({"result": to_jsonable(result), "state": to_jsonable(state)}, state=state)
 
 
 @_tool
@@ -144,14 +148,17 @@ def vm_start_script(output_dir: str) -> dict[str, Any]:
     state = load_state_yaml(state_path)
     source_intake = state.milestone("source_intake")
     if source_intake.status.value != "completed":
-        return {
-            "error": f"Cannot start script milestone: source_intake status is '{source_intake.status.value}' (must be 'completed').",
-            "source_intake_status": source_intake.status.value,
-            "state": to_jsonable(state),
-        }
+        return _with_ui_state(
+            {
+                "error": f"Cannot start script milestone: source_intake status is '{source_intake.status.value}' (must be 'completed').",
+                "source_intake_status": source_intake.status.value,
+                "state": to_jsonable(state),
+            },
+            state=state,
+        )
     run = start_script_milestone(state)
     save_state_yaml(state, state_path)
-    return {"state": to_jsonable(state), "run": to_jsonable(run)}
+    return _with_ui_state({"state": to_jsonable(state), "run": to_jsonable(run)}, state=state)
 
 
 @_tool
@@ -236,9 +243,9 @@ def vm_ratify_script(
     )
     state_path = Path(output_dir) / "state.yaml"
     state = load_state_yaml(state_path)
-    result = ratify_and_update_script(state, goal)
+    result = ratify_and_update_script(state, goal, run_number=run_number)
     save_state_yaml(state, state_path)
-    return {"result": to_jsonable(result), "state": to_jsonable(state)}
+    return _with_ui_state({"result": to_jsonable(result), "state": to_jsonable(state)}, state=state)
 
 
 @_tool
@@ -249,9 +256,9 @@ def vm_start_build_scenes(output_dir: str, script_approved: bool = False) -> dic
     try:
         run = start_build_scenes_milestone(state, script_approved=script_approved)
     except RuntimeError as exc:
-        return {"error": str(exc), "state": to_jsonable(state)}
+        return _with_ui_state({"error": str(exc), "state": to_jsonable(state)}, state=state)
     save_state_yaml(state, state_path)
-    return {"state": to_jsonable(state), "run": to_jsonable(run)}
+    return _with_ui_state({"state": to_jsonable(state), "run": to_jsonable(run)}, state=state)
 
 
 @_tool
@@ -306,7 +313,7 @@ def vm_ratify_build_scenes(output_dir: str) -> dict[str, Any]:
     state = load_state_yaml(state_path)
     result = ratify_and_update_build_scenes(state)
     save_state_yaml(state, state_path)
-    return {"result": to_jsonable(result), "state": to_jsonable(state)}
+    return _with_ui_state({"result": to_jsonable(result), "state": to_jsonable(state)}, state=state)
 
 
 @_tool
@@ -317,9 +324,9 @@ def vm_start_render_package(output_dir: str) -> dict[str, Any]:
     try:
         run = start_render_package_milestone(state)
     except RuntimeError as exc:
-        return {"error": str(exc), "state": to_jsonable(state)}
+        return _with_ui_state({"error": str(exc), "state": to_jsonable(state)}, state=state)
     save_state_yaml(state, state_path)
-    return {"state": to_jsonable(state), "run": to_jsonable(run)}
+    return _with_ui_state({"state": to_jsonable(state), "run": to_jsonable(run)}, state=state)
 
 
 @_tool
@@ -331,13 +338,14 @@ def vm_render_remotion_project(
     """Run pnpm TypeScript, Remotion render, and Remotion still inside remotion-project."""
     state = load_state_yaml(Path(output_dir) / "state.yaml")
     try:
-        return render_remotion_project(
+        payload = render_remotion_project(
             state,
             composition_id=composition_id,
             install=install,
         )
+        return _with_ui_state(payload, state=state)
     except RuntimeError as exc:
-        return {"error": str(exc), "state": to_jsonable(state)}
+        return _with_ui_state({"error": str(exc), "state": to_jsonable(state)}, state=state)
 
 
 @_tool
@@ -349,13 +357,14 @@ def vm_package_render_output(
     """Copy Remotion out/video.mp4 and optional thumbnail into final/."""
     state = load_state_yaml(Path(output_dir) / "state.yaml")
     try:
-        return package_render_output(
+        payload = package_render_output(
             state,
             rendered_video=rendered_video,
             rendered_thumbnail=rendered_thumbnail,
         )
+        return _with_ui_state(payload, state=state)
     except RuntimeError as exc:
-        return {"error": str(exc), "state": to_jsonable(state)}
+        return _with_ui_state({"error": str(exc), "state": to_jsonable(state)}, state=state)
 
 
 @_tool
@@ -366,7 +375,7 @@ def vm_ratify_render_package(output_dir: str) -> dict[str, Any]:
     goal = load_goal_yaml(Path(output_dir) / "goal.yaml")
     result = ratify_and_update_render_package(state, duration=goal.duration)
     save_state_yaml(state, state_path)
-    return {"result": to_jsonable(result), "state": to_jsonable(state)}
+    return _with_ui_state({"result": to_jsonable(result), "state": to_jsonable(state)}, state=state)
 
 
 @_tool
@@ -378,9 +387,10 @@ def vm_build_publish_readiness_report(
     """Write an advisory post-render publish-readiness checklist artifact."""
     state = load_state_yaml(Path(output_dir) / "state.yaml")
     try:
-        return build_publish_readiness_report(state, decision=decision, notes=notes)
+        payload = build_publish_readiness_report(state, decision=decision, notes=notes)
+        return _with_ui_state(payload, output_dir=output_dir)
     except RuntimeError as exc:
-        return {"error": str(exc), "state": to_jsonable(state)}
+        return _with_ui_state({"error": str(exc), "state": to_jsonable(state)}, state=state)
 
 
 def build_langchain_tools() -> list[Any]:
@@ -403,6 +413,22 @@ def build_langchain_tools() -> list[Any]:
         vm_ratify_render_package,
         vm_build_publish_readiness_report,
     ]
+
+
+def _with_ui_state(
+    payload: dict[str, Any],
+    *,
+    state=None,
+    output_dir: str | None = None,
+) -> dict[str, Any]:
+    try:
+        if state is not None:
+            payload["video_maker"] = build_video_maker_ui_state_from_state(state)
+        elif output_dir:
+            payload["video_maker"] = build_video_maker_ui_state(output_dir)
+    except Exception:
+        pass
+    return payload
 
 
 def _resolve_project_root(root_dir: str) -> Path:
