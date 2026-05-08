@@ -32,7 +32,8 @@ class WorkflowStatus(StrEnum):
 @dataclass(slots=True)
 class VideoMakerGoal:
     topic: str
-    source: Literal["websearch", "notebooklm", "local-file", "manual"] = "websearch"
+    source: Literal["folder", "websearch", "notebooklm", "local-file", "manual"] = "manual"
+    source_folder: str = ""
     local_file: str = ""
     notebook_url: str = ""
     excalidraw_file: str = ""
@@ -40,13 +41,13 @@ class VideoMakerGoal:
     style: Literal["professional", "casual", "storytelling"] = "professional"
     aspect_ratio: Literal["16:9", "9:16", "3:4", "1:1"] = "16:9"
     quality_threshold: int = 0
-    eval_mode: Literal["gan", "legacy"] = "gan"
+    eval_mode: Literal["none", "gan", "legacy"] = "none"
     transition_style: str = "fade"
     template: str = "auto"
     lut_style: str = "auto"
     research_depth: str = "auto"
     visual_strategy: str = "auto"
-    composition_mode: str = "auto"
+    composition_mode: str = "none"
     progress_bar_style: str = "minimal"
     enable_video_qa: bool = False
     bgm_file: str = ""

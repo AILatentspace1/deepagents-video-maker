@@ -70,7 +70,7 @@ def save_state_yaml(state: VideoMakerState, path: str | Path) -> Path:
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
     lines = [
-        "workflow: video-maker-native",
+        "workflow: video-maker-v2",
         f"workflow_status: {state.workflow_status.value}",
         f"created_at: {_scalar(state.created_at)}",
         f"output_dir: {_scalar(state.output_dir)}",

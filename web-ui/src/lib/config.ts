@@ -20,7 +20,13 @@ export function getConfig(): StandaloneConfig | null {
   if (!stored) return DEFAULT_CONFIG;
 
   try {
-    return { ...DEFAULT_CONFIG, ...JSON.parse(stored) };
+    const parsed = JSON.parse(stored) as Partial<StandaloneConfig>;
+    return {
+      ...DEFAULT_CONFIG,
+      ...parsed,
+      deploymentUrl: parsed.deploymentUrl?.trim() || DEFAULT_CONFIG.deploymentUrl,
+      assistantId: parsed.assistantId?.trim() || DEFAULT_CONFIG.assistantId,
+    };
   } catch {
     return DEFAULT_CONFIG;
   }

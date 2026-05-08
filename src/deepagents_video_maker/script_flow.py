@@ -14,13 +14,15 @@ from .state_store import update_milestone_status
 
 
 def start_script_milestone(state: VideoMakerState) -> RunInfo:
-    research = state.milestone("research")
-    if research.status != MilestoneStatus.COMPLETED:
+    source_intake = state.milestone("source_intake")
+    if source_intake.status != MilestoneStatus.COMPLETED:
         raise RuntimeError(
-            f"cannot start script milestone: research status={research.status.value} "
+            f"cannot start script milestone: source_intake status={source_intake.status.value} "
             "(must be completed)"
         )
-    return create_milestone_run(state, "script")
+    run = create_milestone_run(state, "script")
+    _write_script_contract(goal=None, state=state, run_info=run)
+    return run
 
 
 def build_scriptwriter_task_description(
@@ -28,11 +30,9 @@ def build_scriptwriter_task_description(
     state: VideoMakerState,
     run_info: RunInfo,
 ) -> str:
-    research_run = state.milestone("research").current_run or 1
-    research_file = (
-        Path(state.output_dir) / "artifacts" / "research" / f"run-{research_run}" / "research.md"
-    )
     paths = script_artifact_paths(state.output_dir, run_info.run_number)
+    contract = _write_script_contract(goal=goal, state=state, run_info=run_info)
+    source_manifest = Path(state.output_dir) / "artifacts" / "source" / "source-manifest.md"
     return f"""You are the DeepAgents-native video-maker Scriptwriter subagent.
 
 Input contract:
@@ -40,23 +40,23 @@ Input contract:
 - duration: {goal.duration}
 - style: {goal.style}
 - aspect_ratio: {goal.aspect_ratio}
+- source_manifest_file: {_to_virtual_path(source_manifest)}
+- contract_file: {_to_virtual_path(contract)}
 - bgm_file: {goal.bgm_file}
 - sfx_enabled: {goal.sfx_enabled}
-- research_file: {_to_virtual_path(research_file)}
 - script_path: {_to_virtual_path(paths["script"])}
-- manifest_path: {_to_virtual_path(paths["manifest"])}
 - eval_mode: {goal.eval_mode}
 
 Required behavior:
-1. Read research_file with read_file. Do not ask Producer to inline content.
-2. Write script.md (Markdown, scenes as `## Scene N`) and manifest.json (JSON with scenes[]).
-3. Each manifest scene must include: id, narration, duration.
-4. script.md scene count must equal manifest.scenes length.
+1. Read source_manifest_file first with read_file. Do not ask Producer to inline folder contents.
+2. Read contract_file and follow the target scene count/duration constraints.
+3. Write only script.md (Markdown, scenes as `## Scene N`) to script_path.
+4. Stop at the script review checkpoint; do not build Remotion scenes.
 5. Return only the output contract summary, not full script text.
 
 Output contract:
 script_path: {_to_virtual_path(paths["script"])}
-manifest_path: {_to_virtual_path(paths["manifest"])}
+contract_file: {_to_virtual_path(contract)}
 scene_count: <number>
 estimated_duration: <seconds>
 blocking_issues: <none or list>
@@ -78,7 +78,7 @@ def ratify_and_update_script(state: VideoMakerState, goal: VideoMakerGoal) -> Ra
     milestone = state.milestone("script")
     run_number = milestone.current_run or 1
     paths = script_artifact_paths(state.output_dir, run_number)
-    result = ratify_script(paths["script"], paths["manifest"])
+    result = ratify_script(paths["script"], paths["contract"])
     ratify_payload = {
         "passed": result.passed,
         "issues": result.issues,
@@ -88,6 +88,7 @@ def ratify_and_update_script(state: VideoMakerState, goal: VideoMakerGoal) -> Ra
         ],
     }
     if result.passed:
+        milestone.retry_count = 0
         update_milestone_status(state, "script", MilestoneStatus.COMPLETED, ratify=ratify_payload)
     else:
         milestone.retry_count += 1
@@ -116,3 +117,44 @@ def ratify_and_update_script(state: VideoMakerState, goal: VideoMakerGoal) -> Ra
         encoding="utf-8",
     )
     return result
+
+
+def _write_script_contract(
+    *,
+    goal: VideoMakerGoal | None,
+    state: VideoMakerState,
+    run_info: RunInfo,
+) -> Path:
+    paths = script_artifact_paths(state.output_dir, run_info.run_number)
+    contract = paths["contract"]
+    contract.parent.mkdir(parents=True, exist_ok=True)
+    duration = goal.duration if goal else "1-3min"
+    scene_ranges = {
+        "1-3min": {"min": 1, "max": 16},
+        "3-5min": {"min": 1, "max": 24},
+        "5-10min": {"min": 1, "max": 40},
+    }
+    seconds_ranges = {
+        "1-3min": {"min": 60, "max": 180},
+        "3-5min": {"min": 180, "max": 300},
+        "5-10min": {"min": 300, "max": 600},
+    }
+    payload = {
+        "version": 2,
+        "topic": goal.topic if goal else "",
+        "duration": duration,
+        "target_scene_count": scene_ranges.get(duration, {"min": 1, "max": 16}),
+        "target_duration_seconds": seconds_ranges.get(duration, {"min": 60, "max": 180}),
+        "narrative_structure": {
+            "opening_type": "hook",
+            "closing_type": "cta",
+            "required_roles": ["hook", "setup", "development", "climax", "cta"],
+        },
+        "constraints": {
+            "max_consecutive_same_type": 3,
+            "min_visual_break_scenes": 1,
+            "audio_scene_types": ["narration", "data_card", "quote_card", "diagram_walkthrough"],
+        },
+    }
+    contract.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    return contract

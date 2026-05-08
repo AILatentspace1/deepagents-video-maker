@@ -9,7 +9,7 @@ import {
 } from "@langchain/langgraph-sdk";
 import { v4 as uuidv4 } from "uuid";
 import type { UseStreamThread } from "@langchain/langgraph-sdk/react";
-import type { TodoItem } from "@/app/types/types";
+import type { TodoItem, VideoMakerUiState } from "@/app/types/types";
 import { useClient } from "@/providers/ClientProvider";
 import { useQueryState } from "nuqs";
 
@@ -23,6 +23,7 @@ export type StateType = {
     page_content?: string;
   };
   ui?: any;
+  video_maker?: VideoMakerUiState;
 };
 
 export function useChat({
@@ -164,6 +165,7 @@ export function useChat({
     files: stream.values.files ?? {},
     email: stream.values.email,
     ui: stream.values.ui,
+    videoMaker: stream.values.video_maker,
     setFiles,
     messages: stream.messages,
     isLoading: stream.isLoading,

@@ -27,6 +27,44 @@ export interface TodoItem {
   updatedAt?: Date;
 }
 
+export type VideoMakerMilestoneStatus =
+  | "pending"
+  | "in_progress"
+  | "interrupted"
+  | "blocked"
+  | "completed"
+  | "failed";
+
+export interface VideoMakerTimelineMilestone {
+  id: string;
+  label?: string;
+  status: VideoMakerMilestoneStatus;
+  blockingReason?: string | null;
+  artifactPaths?: string[];
+}
+
+export interface VideoMakerArtifactLink {
+  kind: string;
+  path: string;
+  exists?: boolean;
+}
+
+export interface VideoMakerPublishReadiness {
+  status: "publish_ready" | "needs_revision" | "not_reviewed";
+  reportPath?: string;
+  notes?: string;
+}
+
+export interface VideoMakerUiState {
+  outputDir?: string;
+  workflowStatus?: "in_progress" | "blocked" | "completed" | "failed";
+  milestones?: VideoMakerTimelineMilestone[];
+  artifacts?: VideoMakerArtifactLink[];
+  currentBlocker?: string | null;
+  nextActions?: string[];
+  publishReadiness?: VideoMakerPublishReadiness;
+}
+
 export interface Thread {
   id: string;
   title: string;

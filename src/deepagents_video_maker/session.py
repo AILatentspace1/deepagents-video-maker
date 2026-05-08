@@ -9,7 +9,7 @@ from .models import MilestoneState, MilestoneStatus, RunInfo, VideoMakerGoal, Vi
 from .state_store import save_goal_yaml, save_state_yaml
 
 
-DEFAULT_MILESTONES = ("research", "script", "assets", "assembly")
+DEFAULT_MILESTONES = ("source_intake", "script", "build_scenes", "render_package")
 
 
 def init_video_session(
@@ -25,9 +25,8 @@ def init_video_session(
     output_dir = root / "output" / f"{stamp}-video-{goal.slug()}"
 
     for relative in [
-        "artifacts/research",
+        "artifacts/source",
         "artifacts/script",
-        "artifacts/assets/visual_director",
         "final",
         "ratify",
     ]:
@@ -37,10 +36,10 @@ def init_video_session(
         output_dir=str(output_dir),
         milestones=[MilestoneState(id=name) for name in DEFAULT_MILESTONES],
         todos=[
-            {"content": "Research milestone", "status": "pending"},
+            {"content": "Source Intake milestone", "status": "pending"},
             {"content": "Script milestone", "status": "pending"},
-            {"content": "Assets milestone", "status": "pending"},
-            {"content": "Assembly milestone", "status": "pending"},
+            {"content": "Build Scenes milestone", "status": "pending"},
+            {"content": "Render Package milestone", "status": "pending"},
         ],
     )
     save_goal_yaml(goal, output_dir / "goal.yaml")

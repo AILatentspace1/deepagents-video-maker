@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "assetDir": "assets",
+  "assets": [
+    {
+      "id": "workflow-diagram",
+      "type": "image",
+      "path": "workflow.svg",
+      "description": "A glowing workflow diagram with context, plan, and tools nodes.",
+      "recommendedUse": "hero visual for scene-02"
+    },
+    {
+      "id": "comparison-card",
+      "type": "image",
+      "path": "comparison.svg",
+      "description": "Before/after comparison card showing automation versus agents.",
+      "recommendedUse": "full bleed background for scene-03"
+    }
+  ]
+}

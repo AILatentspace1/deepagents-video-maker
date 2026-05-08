@@ -13,6 +13,9 @@ _KEY_ALIASES = {
     "话题": "topic",
     "source": "source",
     "素材来源": "source",
+    "source_folder": "source_folder",
+    "sourcefolder": "source_folder",
+    "素材目录": "source_folder",
     "local_file": "local_file",
     "localfile": "local_file",
     "本地文件": "local_file",
@@ -92,6 +95,8 @@ def derive_video_params(goal: VideoMakerGoal) -> VideoMakerGoal:
         else:
             goal.lut_style = "tech_cool"
 
+    goal.eval_mode = goal.eval_mode or "none"  # type: ignore[assignment]
+    goal.composition_mode = goal.composition_mode or "none"
     if goal.visual_strategy == "auto":
         tech_markers = ["AI", "agent", "数据", "编程", "skill", "架构", "SaaS"]
         goal.visual_strategy = (
