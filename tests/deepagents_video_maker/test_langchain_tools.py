@@ -66,14 +66,18 @@ def test_source_intake_tool_sequence_creates_manifest_without_research(tmp_path:
         timestamp="20260425-120000",
     )
     output_dir = init["output_dir"]
+    assert init["video_maker"]["outputDir"] == output_dir
+    assert init["video_maker"]["milestones"][0]["id"] == "source_intake"
 
     started = _invoke(vm_start_source_intake, output_dir=output_dir)
     assert started["run"]["milestone"] == "source_intake"
+    assert started["video_maker"]["milestones"][0]["status"] == "in_progress"
 
     ratified = _invoke(vm_ratify_source_intake, output_dir=output_dir)
 
     manifest = Path(output_dir) / "artifacts" / "source" / "source-manifest.md"
     assert ratified["result"]["passed"] is True
+    assert ratified["video_maker"]["milestones"][0]["status"] == "completed"
     assert manifest.is_file()
     text = manifest.read_text(encoding="utf-8")
     assert "# Source Manifest" in text
@@ -130,6 +134,43 @@ def test_ratify_script_accepts_script_and_contract_without_manifest_json(tmp_pat
 
     assert result["result"]["passed"] is True
     assert not (run_dir / "manifest.json").exists()
+
+
+def test_ratify_script_tool_uses_explicit_run_number(tmp_path: Path):
+    source = _make_source_folder(tmp_path)
+    init = _invoke(
+        vm_init_video_session,
+        topic="script retry ratify v2",
+        source="folder",
+        source_folder=str(source),
+        root_dir=str(tmp_path),
+        timestamp="20260427-110300",
+    )
+    output_dir = init["output_dir"]
+    _invoke(vm_start_source_intake, output_dir=output_dir)
+    _invoke(vm_ratify_source_intake, output_dir=output_dir)
+    started = _invoke(vm_start_script, output_dir=output_dir)
+    run_1_dir = Path(started["run"]["run_dir"])
+    (run_1_dir / "script.md").write_text(
+        "## Scene 1\n- **type**: narration\n",
+        encoding="utf-8",
+    )
+    run_2 = _invoke(vm_build_scriptwriter_task, output_dir=output_dir, run_number=2)
+    run_2_dir = Path(run_2["run_dir"])
+    (run_2_dir / "script.md").write_text(
+        "## Scene 1\n"
+        "type: narration\n"
+        "narration: hi\n"
+        "scene_intent: hook\n"
+        "content_brief: brief\n",
+        encoding="utf-8",
+    )
+
+    result = _invoke(vm_ratify_script, output_dir=output_dir, run_number=2)
+
+    assert result["result"]["passed"] is True
+    assert "current_run: 2" in (Path(output_dir) / "state.yaml").read_text(encoding="utf-8")
+    assert (Path(output_dir) / "ratify" / "script-run-2.json").is_file()
 
 
 def test_build_langchain_tools_exposes_v2_tools_only():

@@ -177,12 +177,13 @@ def render_remotion_project(
     runner = command_runner or _run_command
     commands: list[list[str]] = []
     if install:
-        commands.append(["pnpm", "install"])
+        commands.append(["pnpm", "install", "--ignore-workspace"])
     commands.extend(
         [
-            ["pnpm", "exec", "tsc", "--noEmit"],
+            ["pnpm", "--ignore-workspace", "exec", "tsc", "--noEmit"],
             [
                 "pnpm",
+                "--ignore-workspace",
                 "exec",
                 "remotion",
                 "render",
@@ -193,6 +194,7 @@ def render_remotion_project(
             ],
             [
                 "pnpm",
+                "--ignore-workspace",
                 "exec",
                 "remotion",
                 "still",

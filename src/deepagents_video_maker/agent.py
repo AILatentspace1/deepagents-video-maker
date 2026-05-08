@@ -7,6 +7,7 @@ from typing import Any, Callable
 
 from .prompts import load_prompt, load_subagent_prompt
 from .langchain_tools import build_langchain_tools
+from .middleware import VideoMakerUiStateMiddleware
 
 
 SUBAGENT_NAMES = ["scriptwriter", "remotion-builder"]
@@ -72,6 +73,7 @@ def create_video_maker_agent(
         tools=build_native_tools(),
         system_prompt=load_prompt("producer"),
         subagents=build_subagents(root),
+        middleware=[VideoMakerUiStateMiddleware()],
         backend=effective_backend,
         checkpointer=checkpointer,
         interrupt_on=(

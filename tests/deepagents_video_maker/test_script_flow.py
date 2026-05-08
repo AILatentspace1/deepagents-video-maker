@@ -56,6 +56,9 @@ def test_build_scriptwriter_task_description_includes_source_manifest_and_contra
     desc = build_scriptwriter_task_description(_goal(), state, run)
     assert "source_manifest_file" in desc
     assert "script-contract.json" in desc
+    assert "output_format_reference" in desc
+    assert "Do not modify contract_file" in desc
+    assert "- **type**" in desc
     assert "research_file" not in desc
 
 
@@ -100,6 +103,42 @@ def test_ratify_and_update_script_resets_retry_count_on_pass(tmp_path):
     assert state.milestone("script").status == MilestoneStatus.COMPLETED
     assert state.milestone("script").retry_count == 0
     assert state.milestone("script").blocking_reason is None
+
+
+def test_ratify_and_update_script_can_ratify_explicit_retry_run(tmp_path):
+    state = _state(tmp_path)
+    first_run = start_script_milestone(state)
+    state.milestone("script").current_run = first_run.run_number
+    first_run_dir = Path(first_run.run_dir)
+    (first_run_dir / "script.md").write_text(
+        "## Scene 1\n- **type**: narration\n",
+        encoding="utf-8",
+    )
+
+    second_run_dir = tmp_path / "artifacts" / "script" / "run-2"
+    second_run_dir.mkdir(parents=True)
+    (first_run_dir / "script-contract.json").replace(second_run_dir / "script-contract.json")
+    # Keep run-1 contract present so the test proves ratify selects run-2 by script content,
+    # not because run-1 is missing.
+    (first_run_dir / "script-contract.json").write_text(
+        (second_run_dir / "script-contract.json").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    (second_run_dir / "script.md").write_text(
+        "## Scene 1\n"
+        "type: narration\n"
+        "narration: hi\n"
+        "scene_intent: hook\n"
+        "content_brief: x\n",
+        encoding="utf-8",
+    )
+
+    result = ratify_and_update_script(state, _goal(), run_number=2)
+
+    assert result.passed
+    assert state.milestone("script").status == MilestoneStatus.COMPLETED
+    assert state.milestone("script").current_run == 2
+    assert (tmp_path / "ratify" / "script-run-2.json").exists()
 
 
 def test_ratify_and_update_script_increments_retry_when_artifact_missing(tmp_path):

@@ -158,15 +158,39 @@ def test_render_remotion_project_runs_tsc_render_and_still_commands(tmp_path: Pa
     )
 
     assert result["passed"] is True
-    assert [call[0][0:3] for call in calls] == [
-        ["pnpm", "exec", "tsc"],
-        ["pnpm", "exec", "remotion"],
-        ["pnpm", "exec", "remotion"],
+    assert [call[0][0:4] for call in calls] == [
+        ["pnpm", "--ignore-workspace", "exec", "tsc"],
+        ["pnpm", "--ignore-workspace", "exec", "remotion"],
+        ["pnpm", "--ignore-workspace", "exec", "remotion"],
     ]
     assert all(call[1] == project for call in calls)
     ratify_log = tmp_path / "ratify" / "render-command.json"
     assert ratify_log.is_file()
     assert "VideoMaker" in ratify_log.read_text(encoding="utf-8")
+
+
+def test_render_remotion_project_installs_outside_workspace(tmp_path: Path):
+    state = _state(tmp_path)
+    state.milestone("build_scenes").status = MilestoneStatus.COMPLETED
+    start_render_package_milestone(state)
+    project = tmp_path / "remotion-project"
+    (project / "src").mkdir(parents=True)
+    (project / "package.json").write_text('{"scripts":{}}', encoding="utf-8")
+    (project / "src" / "index.ts").write_text("export {};\n", encoding="utf-8")
+    calls = []
+
+    def fake_runner(command, cwd):
+        calls.append((command, cwd))
+        return 0, "ok", ""
+
+    render_remotion_project(
+        state,
+        composition_id="VideoMaker",
+        install=True,
+        command_runner=fake_runner,
+    )
+
+    assert calls[0][0] == ["pnpm", "install", "--ignore-workspace"]
 
 
 def test_publish_readiness_report_is_advisory_and_requires_final_video(tmp_path: Path):

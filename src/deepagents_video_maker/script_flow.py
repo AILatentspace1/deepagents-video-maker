@@ -42,6 +42,7 @@ Input contract:
 - aspect_ratio: {goal.aspect_ratio}
 - source_manifest_file: {_to_virtual_path(source_manifest)}
 - contract_file: {_to_virtual_path(contract)}
+- output_format_reference: /skills/video-maker-v2/references/scriptwriter-output-contract.md
 - bgm_file: {goal.bgm_file}
 - sfx_enabled: {goal.sfx_enabled}
 - script_path: {_to_virtual_path(paths["script"])}
@@ -49,14 +50,17 @@ Input contract:
 
 Required behavior:
 1. Read source_manifest_file first with read_file. Do not ask Producer to inline folder contents.
-2. Read contract_file and follow the target scene count/duration constraints.
-3. Write only script.md (Markdown, scenes as `## Scene N`) to script_path.
-4. Stop at the script review checkpoint; do not build Remotion scenes.
-5. Return only the output contract summary, not full script text.
+2. Read contract_file and follow the target scene count/duration constraints. Do not modify contract_file.
+3. Read output_format_reference and follow its exact scene schema.
+4. Write only script.md (Markdown, scenes as `## Scene N`) to script_path.
+   Scene fields must be canonical bare keys, for example `type: narration`,
+   `scene_intent:`, and `content_brief:`. Do not write markdown bullet/bold
+   keys such as `- **type**:`.
+5. Stop at the script review checkpoint; do not build Remotion scenes.
+6. Return only the output summary, not full script text.
 
 Output contract:
 script_path: {_to_virtual_path(paths["script"])}
-contract_file: {_to_virtual_path(contract)}
 scene_count: <number>
 estimated_duration: <seconds>
 blocking_issues: <none or list>
@@ -74,10 +78,15 @@ def _to_virtual_path(path: str | Path) -> str:
     return str(path)
 
 
-def ratify_and_update_script(state: VideoMakerState, goal: VideoMakerGoal) -> RatifyResult:
+def ratify_and_update_script(
+    state: VideoMakerState,
+    goal: VideoMakerGoal,
+    *,
+    run_number: int | None = None,
+) -> RatifyResult:
     milestone = state.milestone("script")
-    run_number = milestone.current_run or 1
-    paths = script_artifact_paths(state.output_dir, run_number)
+    selected_run_number = run_number or milestone.current_run or 1
+    paths = script_artifact_paths(state.output_dir, selected_run_number)
     result = ratify_script(paths["script"], paths["contract"])
     ratify_payload = {
         "passed": result.passed,
@@ -88,6 +97,7 @@ def ratify_and_update_script(state: VideoMakerState, goal: VideoMakerGoal) -> Ra
         ],
     }
     if result.passed:
+        milestone.current_run = selected_run_number
         milestone.retry_count = 0
         update_milestone_status(state, "script", MilestoneStatus.COMPLETED, ratify=ratify_payload)
     else:
@@ -112,7 +122,7 @@ def ratify_and_update_script(state: VideoMakerState, goal: VideoMakerGoal) -> Ra
             result.next_action = "retry_milestone"
     ratify_dir = Path(state.output_dir) / "ratify"
     ratify_dir.mkdir(parents=True, exist_ok=True)
-    (ratify_dir / f"script-run-{run_number}.json").write_text(
+    (ratify_dir / f"script-run-{selected_run_number}.json").write_text(
         json.dumps(ratify_payload, indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
