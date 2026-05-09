@@ -1,5 +1,8 @@
 from pathlib import Path
+import shutil
 import sys
+
+import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from scripts.run_golden_demo_smoke import run
@@ -51,6 +54,7 @@ def test_golden_render_smoke_packages_final_fixture_and_publish_readiness(tmp_pa
     assert "workflow_status: completed" in state_text
 
 
+@pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg not installed")
 def test_golden_playable_smoke_produces_probeable_mp4(tmp_path: Path):
     output_dir = run_playable_smoke(tmp_path, timestamp="20260508-010000")
 

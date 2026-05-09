@@ -7,10 +7,10 @@
     "agent:dev": "cd web-ui && uv run langgraph dev",
     "golden:script": "uv run python scripts/run_golden_demo_smoke.py",
     "golden:render": "uv run python scripts/run_golden_render_smoke.py",
-    "golden:playable": "uv run python scripts/run_golden_playable_smoke.py",
     "test:py": "uv run pytest tests/deepagents_video_maker",
     "harness:validate": "uv run better-harness validate harness/video-maker-minimal.toml",
     "harness:run": "uv run better-harness run harness/video-maker-minimal.toml --output-dir runs/baseline --max-iterations 1",
+    "golden:playable": "uv run python scripts/run_golden_playable_smoke.py",
     "ui:build": "node scripts/build-ui.mjs"
   }
 }
