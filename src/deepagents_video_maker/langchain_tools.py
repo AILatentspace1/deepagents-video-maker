@@ -169,7 +169,11 @@ def vm_start_script(output_dir: str) -> dict[str, Any]:
     if source_intake.status.value != "completed":
         return _with_ui_state(
             {
-                "error": f"Cannot start script milestone: source_intake status is '{source_intake.status.value}' (must be 'completed').",
+                "error": (
+                    f"Cannot start script milestone: source_intake status is "
+                    f"'{source_intake.status.value}' (must be 'completed'). "
+                    f"Fix: call vm_ratify_source_intake(output_dir='{output_dir}') first."
+                ),
                 "source_intake_status": source_intake.status.value,
                 "state": to_jsonable(state),
             },
@@ -447,7 +451,8 @@ def _with_ui_state(
         elif output_dir:
             payload["video_maker"] = build_video_maker_ui_state(output_dir)
     except Exception:
-        pass
+        import logging
+        logging.getLogger(__name__).exception("ui_state projection failed")
     return payload
 
 

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import asdict
 from datetime import datetime
+import json
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +25,12 @@ def _scalar(value: Any) -> str:
         return str(value)
     text = str(value).replace("\\", "\\\\").replace('"', '\\"')
     return f'"{text}"'
+
+
+def _serialize_ratify(ratify: dict[str, Any] | None) -> str | None:
+    if ratify is None:
+        return None
+    return json.dumps(ratify, ensure_ascii=False, separators=(",", ":"))
 
 
 def save_goal_yaml(goal: VideoMakerGoal, path: str | Path) -> Path:
@@ -87,6 +94,7 @@ def save_state_yaml(state: VideoMakerState, path: str | Path) -> Path:
                 f"    started_at: {_scalar(milestone.started_at)}",
                 f"    completed_at: {_scalar(milestone.completed_at)}",
                 f"    blocking_reason: {_scalar(milestone.blocking_reason)}",
+                f"    ratify: {_scalar(_serialize_ratify(milestone.ratify))}",
             ]
         )
     lines.append("todos:")
@@ -141,6 +149,14 @@ def load_state_yaml(path: str | Path) -> VideoMakerState:
                 current.completed_at = None if value == "~" else value
             elif key == "blocking_reason":
                 current.blocking_reason = None if value == "~" else value
+            elif key == "ratify":
+                if value == "~":
+                    current.ratify = None
+                else:
+                    try:
+                        current.ratify = json.loads(value)
+                    except (json.JSONDecodeError, ValueError):
+                        current.ratify = {}
 
     return VideoMakerState(
         output_dir=output_dir,

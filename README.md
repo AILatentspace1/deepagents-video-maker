@@ -6,11 +6,24 @@ DeepAgents-native `video-maker-v2` orchestrator. The old research-first `video-m
 
 ```bash
 uv sync && pnpm install
+
+# Produce a playable golden demo video (no API keys required)
+pnpm golden:playable
+
+# Run the test suite
 uv run pytest tests/deepagents_video_maker -q
-uv run python scripts/deepagents_video_maker.py --check
-uv run python scripts/run_golden_demo_smoke.py
+
+# Start the LangGraph dev server (requires ANTHROPIC_API_KEY or DEEPSEEK_API_KEY)
 pnpm agent:dev
 ```
+
+### Prerequisites
+
+- Python >= 3.11, [uv](https://docs.astral.sh/uv/)
+- Node >= 18, pnpm >= 9 (`corepack enable`)
+- ffmpeg / ffprobe (for render pipeline)
+- `ANTHROPIC_API_KEY` or `DEEPSEEK_API_KEY` (for LLM-driven sessions)
+- `TAVILY_API_KEY` (optional, for websearch source intake)
 
 ## Architecture
 

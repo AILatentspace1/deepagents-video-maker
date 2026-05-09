@@ -7,6 +7,7 @@ import {
   Circle,
   Clock,
   FileText,
+  PauseCircle,
   PlayCircle,
 } from "lucide-react";
 import type {
@@ -36,11 +37,21 @@ const ARTIFACT_HINTS: Array<{ kind: string; pattern: RegExp }> = [
 function statusIcon(status: VideoMakerTimelineMilestone["status"]) {
   if (status === "completed") return <CheckCircle className="h-4 w-4 text-success/80" />;
   if (status === "in_progress") return <Clock className="h-4 w-4 text-warning/80" />;
+  if (status === "interrupted") return <PauseCircle className="h-4 w-4 text-amber-500" />;
   if (status === "blocked" || status === "failed") {
     return <AlertCircle className="h-4 w-4 text-destructive/80" />;
   }
   return <Circle className="h-4 w-4 text-tertiary/70" />;
 }
+
+const ARTIFACT_LABELS: Record<string, string> = {
+  source_manifest: "Source Manifest",
+  script: "Script",
+  remotion_project: "Remotion Project",
+  final_video: "Final Video",
+  thumbnail: "Thumbnail",
+  publish_readiness: "Publish Readiness",
+};
 
 function labelFor(id: string) {
   return ORDERED_MILESTONES.find((item) => item.id === id)?.label ?? id;
@@ -122,6 +133,7 @@ export function VideoProductionTimeline({
             className={cn(
               "rounded-lg border border-border bg-background p-3",
               milestone.status === "completed" && "border-success/30",
+              milestone.status === "interrupted" && "border-amber-400/40 bg-amber-50/5",
               milestone.status === "blocked" && "border-destructive/30",
               milestone.status === "failed" && "border-destructive/30"
             )}
@@ -165,7 +177,7 @@ export function VideoProductionTimeline({
                 <FileText className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
               )}
               <div className="min-w-0">
-                <div className="font-medium">{artifact.kind}</div>
+                <div className="font-medium">{ARTIFACT_LABELS[artifact.kind] ?? artifact.kind}</div>
                 <div className="truncate text-muted-foreground" title={artifact.path}>
                   {artifact.path}
                 </div>

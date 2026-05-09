@@ -51,10 +51,14 @@ def start_build_scenes_milestone(
     if script.status != MilestoneStatus.COMPLETED:
         raise RuntimeError(
             f"cannot start build_scenes milestone: script status={script.status.value} "
-            "(must be completed)"
+            "(must be completed). "
+            "Fix: call vm_ratify_script(output_dir=...) first to complete script review."
         )
     if not script_approved:
-        raise RuntimeError("cannot start build_scenes milestone without script_approved=True")
+        raise RuntimeError(
+            "cannot start build_scenes milestone without script_approved=True. "
+            "Fix: pass script_approved=True to vm_start_build_scenes after reviewing the script."
+        )
     return create_milestone_run(state, "build_scenes")
 
 
@@ -156,7 +160,8 @@ def start_render_package_milestone(state: VideoMakerState) -> RunInfo:
     if build.status != MilestoneStatus.COMPLETED:
         raise RuntimeError(
             f"cannot start render_package milestone: build_scenes status={build.status.value} "
-            "(must be completed)"
+            "(must be completed). "
+            "Fix: call vm_ratify_build_scenes(output_dir=...) first."
         )
     return create_milestone_run(state, "render_package")
 
@@ -337,7 +342,10 @@ def build_publish_readiness_report(
 
     video = final_video_path(state.output_dir)
     if not video.is_file() or video.stat().st_size <= 0:
-        raise RuntimeError(f"cannot build publish-readiness report: missing final video {video}")
+        raise RuntimeError(
+            f"cannot build publish-readiness report: missing final video {video}. "
+            "Fix: call vm_ratify_render_package(output_dir=...) first to complete rendering."
+        )
 
     allowed = {"publish_ready", "needs_revision", "not_reviewed"}
     normalized_decision = decision if decision in allowed else "not_reviewed"
