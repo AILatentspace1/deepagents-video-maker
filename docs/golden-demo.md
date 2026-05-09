@@ -149,13 +149,27 @@ pnpm harness:validate
 pnpm ui:build
 ```
 
+If the user-profile `pnpm` shim fails before running repo scripts with
+`EPERM lstat C:\Users\Administrator` or `C:\Users\ADMINI~1`, run the same
+commands through Corepack from the repo root:
+
+```powershell
+corepack pnpm golden:playable
+corepack pnpm ui:build
+```
+
+`pnpm harness:validate` also requires the external `better-harness` CLI to be
+installed in the active `uv` environment. A fresh `uv sync` does not install it
+yet; follow [`harness/README.md`](../harness/README.md) first or expect
+`Failed to spawn: better-harness`.
+
 If `pnpm` hits a Windows temp permission issue around `C:\Users\ADMINI~1`, rerun
 with:
 
 ```powershell
 $env:TEMP='C:\tmp'
 $env:TMP='C:\tmp'
-pnpm harness:validate
+corepack pnpm harness:validate
 ```
 
 The UI production build intentionally runs through

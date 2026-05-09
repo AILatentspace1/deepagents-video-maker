@@ -8,6 +8,10 @@ The minimal integration optimizes only the **Scriptwriter prompt** surface.
 
 ### Prerequisites
 
+`pnpm harness:validate` and `pnpm harness:run` call `uv run better-harness ...`.
+A fresh `uv sync` for this repository does **not** install `better-harness`; install
+the external CLI into the active `uv` environment first:
+
 ```bash
 # Install better-harness from deepagents repo
 cd /tmp
@@ -15,6 +19,15 @@ git clone https://github.com/langchain-ai/deepagents.git
 cd deepagents/examples/better-harness
 uv sync
 uv pip install -e .
+```
+
+On Windows/Codex worktrees, if the user-profile `pnpm` shim fails before repo
+scripts run with `EPERM lstat C:\Users\Administrator` or
+`C:\Users\ADMINI~1`, use Corepack so the repo `packageManager` pin is honored:
+
+```powershell
+corepack pnpm harness:validate
+corepack pnpm harness:run
 ```
 
 ### Run Optimization
