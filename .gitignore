@@ -19,3 +19,4 @@ uv.lock
 .claude/
 runs/
 *.mp4
+logs/
