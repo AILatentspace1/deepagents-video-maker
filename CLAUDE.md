@@ -24,3 +24,7 @@ pnpm ui:dev                      # Next.js UI dev server
 - Node: `pnpm ...` always
 - No `.claude/skills` path references in code — use `skills/video-maker/` instead
 - Commit style: conventional commits (feat, fix, docs, chore, refactor, test)
+
+## Optional Tooling
+
+- gstack (slash-command skills like `/plan-ceo-review`, `/review`, `/qa`): install once with `git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git ~/.claude/skills/gstack && cd ~/.claude/skills/gstack && ./setup` (requires Bun ≥1.0).
