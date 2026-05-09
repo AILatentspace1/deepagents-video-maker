@@ -10,18 +10,25 @@ from .artifacts import script_artifact_paths
 from .models import MilestoneStatus, RatifyResult, RunInfo, VideoMakerGoal, VideoMakerState
 from .ratify import ratify_script
 from .session import create_milestone_run
-from .state_store import update_milestone_status
+from .state_store import load_goal_yaml, update_milestone_status
 
 
-def start_script_milestone(state: VideoMakerState) -> RunInfo:
+def start_script_milestone(
+    state: VideoMakerState,
+    goal: VideoMakerGoal | None = None,
+) -> RunInfo:
     source_intake = state.milestone("source_intake")
     if source_intake.status != MilestoneStatus.COMPLETED:
         raise RuntimeError(
             f"cannot start script milestone: source_intake status={source_intake.status.value} "
             "(must be completed)"
         )
+    if goal is None:
+        goal_path = Path(state.output_dir) / "goal.yaml"
+        if goal_path.exists():
+            goal = load_goal_yaml(goal_path)
     run = create_milestone_run(state, "script")
-    _write_script_contract(goal=None, state=state, run_info=run)
+    _write_script_contract(goal=goal, state=state, run_info=run)
     return run
 
 
@@ -31,7 +38,12 @@ def build_scriptwriter_task_description(
     run_info: RunInfo,
 ) -> str:
     paths = script_artifact_paths(state.output_dir, run_info.run_number)
-    contract = _write_script_contract(goal=goal, state=state, run_info=run_info)
+    # Only write the contract if it hasn't been created yet (e.g. for retry runs or
+    # when called without a prior start_script_milestone).  For run-1 the contract
+    # is already written—with the correct goal—by start_script_milestone().
+    if not paths["contract"].exists():
+        _write_script_contract(goal=goal, state=state, run_info=run_info)
+    contract = paths["contract"]
     source_manifest = Path(state.output_dir) / "artifacts" / "source" / "source-manifest.md"
     return f"""You are the DeepAgents-native video-maker Scriptwriter subagent.
 

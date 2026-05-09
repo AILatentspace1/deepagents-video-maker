@@ -13,6 +13,7 @@ from deepagents_video_maker.script_flow import (
     ratify_and_update_script,
     start_script_milestone,
 )
+from deepagents_video_maker.state_store import save_goal_yaml
 
 
 def _state(tmp_path: Path, source_status=MilestoneStatus.COMPLETED) -> VideoMakerState:
@@ -45,6 +46,41 @@ def test_start_script_milestone_creates_run_dir_and_contract(tmp_path):
     assert run.milestone == "script"
     assert state.milestone("script").status == MilestoneStatus.IN_PROGRESS
     assert (Path(run.run_dir) / "script-contract.json").exists()
+
+
+def test_start_script_milestone_uses_goal_yaml_when_present(tmp_path):
+    """Contract is written with the real topic when goal.yaml exists in output_dir."""
+    state = _state(tmp_path)
+    save_goal_yaml(_goal(), tmp_path / "goal.yaml")
+    run = start_script_milestone(state)
+    contract = json.loads((Path(run.run_dir) / "script-contract.json").read_text(encoding="utf-8"))
+    assert contract["topic"] == "quantum attention"
+    assert contract["duration"] == "1-3min"
+
+
+def test_start_script_milestone_falls_back_to_empty_topic_without_goal_yaml(tmp_path):
+    """When goal.yaml is absent and no goal is passed, topic defaults to empty string."""
+    state = _state(tmp_path)
+    run = start_script_milestone(state)
+    contract = json.loads((Path(run.run_dir) / "script-contract.json").read_text(encoding="utf-8"))
+    assert contract["topic"] == ""
+
+
+def test_build_scriptwriter_task_does_not_overwrite_existing_contract(tmp_path):
+    """build_scriptwriter_task_description must not clobber the contract already written
+    by start_script_milestone (which has the correct goal data)."""
+    state = _state(tmp_path)
+    save_goal_yaml(_goal(), tmp_path / "goal.yaml")
+    run = start_script_milestone(state)
+    contract_path = Path(run.run_dir) / "script-contract.json"
+    mtime_before = contract_path.stat().st_mtime
+
+    manifest = tmp_path / "artifacts/source/source-manifest.md"
+    manifest.parent.mkdir(parents=True, exist_ok=True)
+    manifest.write_text("# Source Manifest\n", encoding="utf-8")
+
+    build_scriptwriter_task_description(_goal(), state, run)
+    assert contract_path.stat().st_mtime == mtime_before, "contract must not be rewritten"
 
 
 def test_build_scriptwriter_task_description_includes_source_manifest_and_contract(tmp_path):
