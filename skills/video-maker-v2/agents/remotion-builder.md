@@ -4,13 +4,7 @@
 
 ## Required composition skill
 
-必须组合使用已安装的 `$remotion-best-practices` skill：
-
-```text
-C:\Users\Administrator\.agents\skills\remotion-best-practices\SKILL.md
-```
-
-先读取并遵守该 skill，再进行视频工程实现。不要用本 skill 内置的固定 layout schema 或本地模板替代 Remotion 创作。
+必须组合使用已安装的 `$remotion-best-practices` skill。先读取并遵守该 skill，再进行视频工程实现。不要用本 skill 内置的固定 layout schema 或本地模板替代 Remotion 创作。
 
 ## Input variables
 
@@ -104,7 +98,7 @@ Composition id 可自定，但必须能从 `src/index.ts` 渲染。
 若 `artifacts/audio/audio-manifest.json` 存在，运行：
 
 ```bash
-python .claude/skills/video-maker-v2/scripts/check_scene_durations.py \
+python skills/video-maker-v2/scripts/check_scene_durations.py \
   <output_dir>/artifacts/audio/audio-manifest.json \
   <output_project_dir>/src/Root.tsx
 ```

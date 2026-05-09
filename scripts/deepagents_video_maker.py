@@ -143,16 +143,25 @@ def to_virtual_path(path: str) -> str:
     if not isinstance(path, str):
         return path
     raw = _strip_windows_extended_prefix(path)
-    if raw.startswith("/workspace/"):
-        return "/" + raw.removeprefix("/workspace/")
+    # Normalize Windows backslashes to forward slashes for cross-platform handling.
+    normalized = raw.replace("\\", "/")
+    if normalized.startswith("/workspace/"):
+        return "/" + normalized.removeprefix("/workspace/")
     candidate = Path(raw)
     if candidate.is_absolute():
         try:
             rel = _resolve_local_path(raw).relative_to(PROJECT_ROOT.resolve())
             return "/" + str(rel).replace("\\", "/")
         except Exception:
-            return raw
-    return raw
+            pass
+    # Fall back to a string-based search for well-known project-relative segments.
+    # This handles Windows absolute paths (e.g. E:/workspace/.../output/...) on
+    # non-Windows hosts where Path().is_absolute() returns False for drive paths.
+    for marker in ("/output/",):
+        idx = normalized.find(marker)
+        if idx != -1:
+            return normalized[idx:]
+    return normalized
 
 
 def patch_deepagents_path_validation() -> None:

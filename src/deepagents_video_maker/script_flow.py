@@ -10,18 +10,32 @@ from .artifacts import script_artifact_paths
 from .models import MilestoneStatus, RatifyResult, RunInfo, VideoMakerGoal, VideoMakerState
 from .ratify import ratify_script
 from .session import create_milestone_run
-from .state_store import update_milestone_status
+from .state_store import load_goal_yaml, update_milestone_status
 
 
-def start_script_milestone(state: VideoMakerState) -> RunInfo:
+def start_script_milestone(
+    state: VideoMakerState,
+    goal: VideoMakerGoal | None = None,
+) -> RunInfo:
     source_intake = state.milestone("source_intake")
     if source_intake.status != MilestoneStatus.COMPLETED:
         raise RuntimeError(
             f"cannot start script milestone: source_intake status={source_intake.status.value} "
             "(must be completed)"
         )
+    if goal is None:
+        goal_path = Path(state.output_dir) / "goal.yaml"
+        if goal_path.exists():
+            goal = load_goal_yaml(goal_path)
     run = create_milestone_run(state, "script")
-    _write_script_contract(goal=None, state=state, run_info=run)
+    # Only write the contract when the file is absent.  Each new run receives
+    # its own path (run-N/script-contract.json) from create_milestone_run(), so
+    # this path is always fresh on the first pass; the guard prevents a
+    # double-write if start_script_milestone() is somehow called twice for the
+    # same run.
+    paths = script_artifact_paths(state.output_dir, run.run_number)
+    if not paths["contract"].exists():
+        _write_script_contract(goal=goal, state=state, run_info=run)
     return run
 
 
@@ -31,7 +45,13 @@ def build_scriptwriter_task_description(
     run_info: RunInfo,
 ) -> str:
     paths = script_artifact_paths(state.output_dir, run_info.run_number)
-    contract = _write_script_contract(goal=goal, state=state, run_info=run_info)
+    # Only write the contract if it doesn't already exist on disk.  The first
+    # run's contract is written—with the correct goal data—by
+    # start_script_milestone(), so we avoid clobbering it here.  Retry runs
+    # (run_number > 1) will have a new, absent path and will be written below.
+    if not paths["contract"].exists():
+        _write_script_contract(goal=goal, state=state, run_info=run_info)
+    contract = paths["contract"]
     source_manifest = Path(state.output_dir) / "artifacts" / "source" / "source-manifest.md"
     return f"""You are the DeepAgents-native video-maker Scriptwriter subagent.
 
