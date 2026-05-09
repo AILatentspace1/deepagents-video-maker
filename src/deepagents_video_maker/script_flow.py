@@ -38,9 +38,10 @@ def build_scriptwriter_task_description(
     run_info: RunInfo,
 ) -> str:
     paths = script_artifact_paths(state.output_dir, run_info.run_number)
-    # Only write the contract if it hasn't been created yet (e.g. for retry runs or
-    # when called without a prior start_script_milestone).  For run-1 the contract
-    # is already written—with the correct goal—by start_script_milestone().
+    # Only write the contract if it doesn't already exist on disk.  The first
+    # run's contract is written—with the correct goal data—by
+    # start_script_milestone(), so we avoid clobbering it here.  Retry runs
+    # (run_number > 1) will have a new, absent path and will be written below.
     if not paths["contract"].exists():
         _write_script_contract(goal=goal, state=state, run_info=run_info)
     contract = paths["contract"]

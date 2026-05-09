@@ -73,14 +73,16 @@ def test_build_scriptwriter_task_does_not_overwrite_existing_contract(tmp_path):
     save_goal_yaml(_goal(), tmp_path / "goal.yaml")
     run = start_script_milestone(state)
     contract_path = Path(run.run_dir) / "script-contract.json"
-    mtime_before = contract_path.stat().st_mtime
+    original_content = contract_path.read_text(encoding="utf-8")
 
     manifest = tmp_path / "artifacts/source/source-manifest.md"
     manifest.parent.mkdir(parents=True, exist_ok=True)
     manifest.write_text("# Source Manifest\n", encoding="utf-8")
 
     build_scriptwriter_task_description(_goal(), state, run)
-    assert contract_path.stat().st_mtime == mtime_before, "contract must not be rewritten"
+    assert contract_path.read_text(encoding="utf-8") == original_content, (
+        "contract must not be rewritten by build_scriptwriter_task_description"
+    )
 
 
 def test_build_scriptwriter_task_description_includes_source_manifest_and_contract(tmp_path):
