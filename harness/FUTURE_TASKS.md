@@ -29,11 +29,11 @@ Install the better-harness system from the deepagents repo and validate the mini
 Add more optimization surfaces beyond just the scriptwriter prompt.
 
 ### Additional Surfaces to Add
-1. **Producer prompt** (`skills/video-maker/SKILL.md`)
+1. **Producer prompt**
    - Main orchestrator logic
    - High impact on overall agent behavior
 
-2. **Researcher prompt** (`skills/video-maker/agents/researcher.md`)
+2. **Researcher prompt**
    - Research quality impacts script quality
    - Medium priority
 
