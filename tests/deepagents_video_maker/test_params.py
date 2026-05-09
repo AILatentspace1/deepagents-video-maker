@@ -1,43 +1,39 @@
 from deepagents_video_maker.params import parse_video_request
 
 
-def test_parse_video_request_derives_defaults():
+def test_parse_video_request_accepts_folder_source_and_source_folder():
     goal = parse_video_request(
-        """
-        topic=介绍 video-maker skill；
-        source=local-file；
-        local_file=/docs/ARCHITECTURE-VIDEO-MAKER.md；
-        duration=1-3min；
-        style=professional；
-        aspectRatio=16:9；
-        quality_threshold=0；
-        eval_mode=gan；
-        """
+        r'''
+        topic=LLM video benchmark
+        source=folder
+        source_folder=E:\workspace\video-maker-v2
+        duration=3-5min
+        style=professional
+        aspectRatio=16:9
+        '''
     )
 
-    assert goal.topic == "介绍 video-maker skill"
-    assert goal.source == "local-file"
-    assert goal.local_file == "/docs/ARCHITECTURE-VIDEO-MAKER.md"
+    assert goal.topic == "LLM video benchmark"
+    assert goal.source == "folder"
+    assert goal.source_folder == r"E:\workspace\video-maker-v2"
     assert goal.aspect_ratio == "16:9"
-    assert goal.quality_threshold == 0
-    assert goal.research_depth == "light"
-    assert goal.template == "news-clean"
-    assert goal.lut_style == "news_neutral"
-    assert goal.visual_strategy == "image_light"
+    assert goal.eval_mode == "none"
+    assert goal.composition_mode == "none"
 
 
 def test_slug_is_stable_for_mixed_topic():
-    goal = parse_video_request("topic=介绍 video-maker skill")
+    goal = parse_video_request("topic=介绍 video-maker-v2 skill")
 
-    assert goal.slug() == "介绍-video-maker-skill"
+    assert goal.slug() == "介绍-video-maker-v2-skill"
 
 
-def test_parse_video_request_accepts_comma_separated_pairs():
-    goal = parse_video_request(
-        "topic=介绍 video-maker skill, source=local-file, "
-        "local_file=/docs/ARCHITECTURE-VIDEO-MAKER.md"
-    )
+def test_parse_video_request_defaults_to_websearch_source_for_free_text():
+    goal = parse_video_request("介绍一个没有显式 source 的视频")
 
-    assert goal.topic == "介绍 video-maker skill"
-    assert goal.source == "local-file"
-    assert goal.local_file == "/docs/ARCHITECTURE-VIDEO-MAKER.md"
+    assert goal.source == "websearch"
+
+
+def test_parse_video_request_defaults_to_websearch_when_no_source_path():
+    goal = parse_video_request("topic=AI Agent")
+
+    assert goal.source == "websearch"

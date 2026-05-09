@@ -10,7 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .artifacts import detect_tool_call_dropout, research_artifact_path
+from .artifacts import detect_tool_call_dropout, source_manifest_path
 from .models import MilestoneStatus, VideoMakerState
 from .state_store import update_milestone_status
 
@@ -26,8 +26,8 @@ def block_if_tool_call_dropout(
 
     milestone = state.milestone(milestone_id)
     artifact = expected_artifact
-    if artifact is None and milestone_id == "research":
-        artifact = research_artifact_path(state.output_dir, milestone.current_run or 1)
+    if artifact is None and milestone_id == "source_intake":
+        artifact = source_manifest_path(state.output_dir)
     if artifact is None:
         return False
 
@@ -53,10 +53,8 @@ def can_enter_milestone(state: VideoMakerState, milestone_id: str) -> bool:
     """Minimal artifact gate for milestone transition checks."""
 
     if milestone_id == "script":
-        research = state.milestone("research")
-        if research.status != MilestoneStatus.COMPLETED:
+        source_intake = state.milestone("source_intake")
+        if source_intake.status != MilestoneStatus.COMPLETED:
             return False
-        research_path = research_artifact_path(state.output_dir, research.current_run or 1)
-        return research_path.exists()
+        return source_manifest_path(state.output_dir).exists()
     return True
-

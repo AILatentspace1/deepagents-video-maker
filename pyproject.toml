@@ -15,8 +15,14 @@ dependencies = [
   "langchain-tavily>=0.2.18",
 ]
 
+[project.optional-dependencies]
+transcription = [
+  "faster-whisper>=1.2.1",
+]
+
 [dependency-groups]
 dev = [
+    "isort>=8.0.1",
     "langgraph-cli[inmem]>=0.2",
     "pytest>=8.0.0",
 ]

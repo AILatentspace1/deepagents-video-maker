@@ -1,0 +1,4 @@
+interface:
+  display_name: "Video Maker v2"
+  short_description: "Composition-first Remotion video workflow"
+  default_prompt: "Use $video-maker-v2 to create a short video package from my topic and source material."

@@ -13,6 +13,9 @@ _KEY_ALIASES = {
     "话题": "topic",
     "source": "source",
     "素材来源": "source",
+    "source_folder": "source_folder",
+    "sourcefolder": "source_folder",
+    "素材目录": "source_folder",
     "local_file": "local_file",
     "localfile": "local_file",
     "本地文件": "local_file",
@@ -65,6 +68,14 @@ def parse_video_request(text: str) -> VideoMakerGoal:
 def derive_video_params(goal: VideoMakerGoal) -> VideoMakerGoal:
     """Apply deterministic defaults from video-maker parameter rules."""
 
+    if (
+        goal.source == "manual"
+        and not goal.source_folder
+        and not goal.local_file
+        and not goal.notebook_url
+    ):
+        goal.source = "websearch"
+
     if goal.research_depth == "auto":
         goal.research_depth = {
             "1-3min": "light",
@@ -92,6 +103,8 @@ def derive_video_params(goal: VideoMakerGoal) -> VideoMakerGoal:
         else:
             goal.lut_style = "tech_cool"
 
+    goal.eval_mode = goal.eval_mode or "none"  # type: ignore[assignment]
+    goal.composition_mode = goal.composition_mode or "none"
     if goal.visual_strategy == "auto":
         tech_markers = ["AI", "agent", "数据", "编程", "skill", "架构", "SaaS"]
         goal.visual_strategy = (

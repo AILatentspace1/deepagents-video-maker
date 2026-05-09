@@ -1,3 +1,6 @@
 {
-  "git.scanRepositories": [".wiki"]
+  "git.scanRepositories": [
+    ".wiki"
+  ],
+  "isort.importStrategy": "fromEnvironment"
 }

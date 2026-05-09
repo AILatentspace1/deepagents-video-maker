@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="700" viewBox="0 0 900 700">
+  <rect width="900" height="700" rx="40" fill="#111827"/>
+  <g font-family="Arial, sans-serif">
+    <text x="450" y="95" text-anchor="middle" fill="#f8fafc" font-size="44" font-weight="700">Before / After</text>
+    <rect x="80" y="160" width="310" height="410" rx="28" fill="#312e81" opacity="0.85"/>
+    <rect x="510" y="160" width="310" height="410" rx="28" fill="#0f766e" opacity="0.85"/>
+    <text x="235" y="230" text-anchor="middle" fill="#e0e7ff" font-size="34" font-weight="700">Automation</text>
+    <text x="665" y="230" text-anchor="middle" fill="#ccfbf1" font-size="34" font-weight="700">Agent</text>
+    <text x="235" y="310" text-anchor="middle" fill="#c7d2fe" font-size="28">Fixed rules</text>
+    <text x="235" y="370" text-anchor="middle" fill="#c7d2fe" font-size="28">Weak context</text>
+    <text x="235" y="430" text-anchor="middle" fill="#c7d2fe" font-size="28">Manual recovery</text>
+    <text x="665" y="310" text-anchor="middle" fill="#99f6e4" font-size="28">Dynamic planning</text>
+    <text x="665" y="370" text-anchor="middle" fill="#99f6e4" font-size="28">Tool use</text>
+    <text x="665" y="430" text-anchor="middle" fill="#99f6e4" font-size="28">Self-correction</text>
+  </g>
+</svg>

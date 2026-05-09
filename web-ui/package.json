@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "node ../scripts/build-ui.mjs",
     "start": "next start",
     "agent:dev": "uv run langgraph dev",
     "lint": "eslint .",

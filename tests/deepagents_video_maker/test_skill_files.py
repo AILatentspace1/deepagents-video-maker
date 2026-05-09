@@ -1,73 +1,81 @@
 from pathlib import Path
 
 SKILLS_ROOT = Path(".deepagents/skills")
+PROJECT_SKILL = Path("skills/video-maker-v2")
 
 
-def test_video_researcher_skill_has_frontmatter():
-    text = (SKILLS_ROOT / "video-researcher" / "SKILL.md").read_text(encoding="utf-8")
+def test_video_maker_v2_project_skill_exists():
+    text = (PROJECT_SKILL / "SKILL.md").read_text(encoding="utf-8")
     assert text.startswith("---\n")
-    assert "name: video-researcher" in text
-    assert "description:" in text
+    assert "name: video-maker-v2" in text
+    assert (PROJECT_SKILL / "references" / "workflow-contract.md").is_file()
+    assert (PROJECT_SKILL / "agents" / "scriptwriter.md").is_file()
 
 
-def test_video_scriptwriter_skill_has_frontmatter():
-    text = (SKILLS_ROOT / "video-scriptwriter" / "SKILL.md").read_text(encoding="utf-8")
+def test_v2_scriptwriter_wrapper_has_frontmatter():
+    text = (SKILLS_ROOT / "video-maker-v2-scriptwriter" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
     assert text.startswith("---\n")
-    assert "name: video-scriptwriter" in text
-    assert "description:" in text
+    assert "name: video-maker-v2-scriptwriter" in text
+    assert "/skills/video-maker-v2/agents/scriptwriter.md" in text
 
 
-def test_skill_wrappers_reference_virtual_paths():
-    for name in ("video-researcher", "video-scriptwriter"):
-        text = (SKILLS_ROOT / name / "SKILL.md").read_text(encoding="utf-8")
-        for line in text.splitlines():
-            if "skills/video-maker" in line:
-                assert "/skills/video-maker" in line, f"{name} has non-virtual path: {line}"
-            assert ".claude/skills/video-maker" not in line, (
-                f"{name} still references .claude/skills/video-maker: {line}"
-            )
+def test_v2_remotion_builder_wrapper_has_frontmatter():
+    text = (SKILLS_ROOT / "video-maker-v2-remotion-builder" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    assert text.startswith("---\n")
+    assert "name: video-maker-v2-remotion-builder" in text
+    assert "/skills/video-maker-v2/agents/remotion-builder.md" in text
 
 
-def test_no_claude_skills_path_in_code():
-    """Ensure code and config do not reference .claude/skills/video-maker."""
+def test_legacy_v1_skill_entries_are_removed():
+    assert not Path("skills/video-maker").exists()
+    assert not (SKILLS_ROOT / "video-researcher").exists()
+    assert not (SKILLS_ROOT / "video-scriptwriter").exists()
+
+
+def test_no_legacy_v1_skill_path_in_code():
     import re
-    src_root = Path("src")
-    tests_root = Path("tests")
-    scripts_root = Path("scripts")
-    skill_wrappers = Path(".deepagents/skills")
-    pattern = re.compile(r"\.claude/skills/video-maker")
-    _this_file = Path(__file__).resolve()
-    exempt_prefixes = (Path("docs/design"),)
 
-    def check_dir(d: Path):
-        if not d.exists():
-            return
-        for f in d.rglob("*"):
-            if not f.is_file():
+    pattern = re.compile(r"skills/video-maker(?!-v2)")
+    for root in (Path("src"), Path("scripts"), Path(".deepagents/skills")):
+        if not root.exists():
+            continue
+        for f in root.rglob("*"):
+            if not f.is_file() or "__pycache__" in f.parts:
                 continue
-            if f.resolve() == _this_file:
-                continue
-            if "__pycache__" in f.parts:
-                continue
-            if any(str(f).startswith(str(e)) for e in exempt_prefixes):
-                continue
-            try:
-                content = f.read_text(encoding="utf-8", errors="ignore")
-            except Exception:
-                continue
-            assert not pattern.search(content), (
-                f"{f} still contains .claude/skills/video-maker"
-            )
-
-    for d in (src_root, tests_root, scripts_root, skill_wrappers):
-        check_dir(d)
+            content = f.read_text(encoding="utf-8", errors="ignore")
+            assert not pattern.search(content), f"{f} still references legacy video-maker"
 
 
-def test_no_producer_business_skill_in_skills_root():
-    if SKILLS_ROOT.exists():
-        for skill_dir in SKILLS_ROOT.iterdir():
-            if not skill_dir.is_dir():
-                continue
-            assert skill_dir.name in {"video-researcher", "video-scriptwriter"}, (
-                f"unexpected skill dir {skill_dir.name}; only subagent wrappers allowed"
-            )
+def test_only_v2_subagent_wrapper_in_deepagents_skills():
+    assert {p.name for p in SKILLS_ROOT.iterdir() if p.is_dir()} == {
+        "video-maker-v2-scriptwriter",
+        "video-maker-v2-remotion-builder",
+    }
+
+
+def test_harness_and_package_scripts_do_not_reference_removed_v1_or_evals():
+    import json
+
+    package = json.loads(Path("package.json").read_text(encoding="utf-8"))
+    scripts_text = json.dumps(package.get("scripts", {}))
+    harness_text = Path("harness/video-maker-minimal.toml").read_text(encoding="utf-8")
+
+    combined = scripts_text + "\n" + harness_text
+    assert "skills/video-maker/agents/scriptwriter.md" not in combined
+    assert "tests/evals" not in combined
+    assert "scripts/video_to_golden.py" not in combined
+    assert "skills/video-maker-v2/agents/scriptwriter.md" in harness_text
+
+
+def test_skill_documents_audio_as_optional_until_native_audio_milestone_exists():
+    text = (PROJECT_SKILL / "SKILL.md").read_text(encoding="utf-8")
+
+    assert "Generate Audio (optional)" in text
+    assert (
+        "native runnable path is Source Intake → Script → user script review → "
+        "Build Remotion Project → Render & Package"
+    ) in text
