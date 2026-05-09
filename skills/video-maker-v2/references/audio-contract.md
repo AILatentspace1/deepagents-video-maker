@@ -9,7 +9,7 @@ Covers TTS generation, duration measurement, manifest schema, and how Remotion B
 Generate one WAV per scene that has a `narration` field:
 
 ```bash
-python .claude/skills/video-maker-v2/scripts/qwen3_tts_scene.py \
+python skills/video-maker-v2/scripts/tts_scene.py \
   --scene <N> \
   --text "<narration text>" \
   --output <output_dir>/audio/scene_<NN>.wav \
@@ -30,7 +30,7 @@ Output path convention: `<output_dir>/audio/scene_<zero-padded-N>.wav`
 After all scenes are processed:
 
 ```bash
-python .claude/skills/video-maker-v2/scripts/compute_scene_durations.py <output_dir>
+python skills/video-maker-v2/scripts/compute_scene_durations.py <output_dir>
 ```
 
 The script scans `<output_dir>/audio/scene_*.wav`, measures actual durations via the Python `wave` module, computes `duration_frames = ceil(duration_s * fps) + 30` (30 frames = 1 s comfort buffer), and writes:
