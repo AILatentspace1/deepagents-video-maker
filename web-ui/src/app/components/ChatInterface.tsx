@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { ChatMessage } from "@/app/components/ChatMessage";
 import { ToolApprovalInterrupt } from "@/app/components/ToolApprovalInterrupt";
+import { VideoProductionTimeline } from "@/app/components/VideoProductionTimeline";
 import type {
   TodoItem,
   ToolCall,
@@ -107,6 +108,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(({ assistant }) => {
     todos,
     files,
     ui,
+    videoMaker,
     setFiles,
     isLoading,
     isThreadLoading,
@@ -116,7 +118,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(({ assistant }) => {
     resumeInterrupt,
   } = useChatContext();
 
-  const submitDisabled = isLoading || !assistant;
+  const submitDisabled = isLoading;
 
   const handleSubmit = useCallback(
     (e?: FormEvent) => {
@@ -124,11 +126,11 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(({ assistant }) => {
         e.preventDefault();
       }
       const messageText = input.trim();
-      if (!messageText || isLoading || submitDisabled) return;
+      if (!messageText || isLoading) return;
       sendMessage(messageText);
       setInput("");
     },
-    [input, isLoading, sendMessage, setInput, submitDisabled]
+    [input, isLoading, sendMessage, setInput]
   );
 
   const handleKeyDown = useCallback(
@@ -327,6 +329,10 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(({ assistant }) => {
                   />
                 );
               })}
+              <VideoProductionTimeline
+                videoMaker={videoMaker}
+                files={files}
+              />
             </>
           )}
         </div>
@@ -602,7 +608,12 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(({ assistant }) => {
                   type={isLoading ? "button" : "submit"}
                   variant={isLoading ? "destructive" : "default"}
                   onClick={isLoading ? stopStream : handleSubmit}
-                  disabled={!isLoading && (submitDisabled || !input.trim())}
+                  disabled={!isLoading && !input.trim()}
+                  title={
+                    !isLoading && !input.trim()
+                      ? "Enter a message before sending"
+                      : undefined
+                  }
                 >
                   {isLoading ? (
                     <>

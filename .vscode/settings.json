@@ -1,3 +1,14 @@
 {
-  "git.scanRepositories": [".wiki"]
+  "git.scanRepositories": [
+    ".wiki"
+  ],
+  "isort.importStrategy": "fromEnvironment",
+  "isort.interpreter": [
+    "${workspaceFolder}\\.venv\\Scripts\\python.exe"
+  ],
+  "isort.path": [
+    "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+    "-m",
+    "isort"
+  ]
 }

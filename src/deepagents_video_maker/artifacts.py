@@ -20,23 +20,25 @@ def collect_artifacts(output_dir: str | Path) -> dict[str, ArtifactRef]:
     known = {
         "goal": root / "goal.yaml",
         "state": root / "state.yaml",
-        "research": root / "artifacts" / "research" / "run-1" / "research.md",
+        "source_manifest": root / "artifacts" / "source" / "source-manifest.md",
         "script": root / "artifacts" / "script" / "run-1" / "script.md",
-        "manifest": root / "artifacts" / "script" / "run-1" / "manifest.json",
+        "script_contract": root / "artifacts" / "script" / "run-1" / "script-contract.json",
+        "remotion_project": root / "remotion-project" / "package.json",
         "final_video": root / "final" / "video.mp4",
+        "thumbnail": root / "final" / "thumbnail.jpg",
     }
     return {kind: artifact_ref(kind, path) for kind, path in known.items()}
 
 
-def research_artifact_path(output_dir: str | Path, run_number: int = 1) -> Path:
-    return Path(output_dir) / "artifacts" / "research" / f"run-{run_number}" / "research.md"
+def source_manifest_path(output_dir: str | Path) -> Path:
+    return Path(output_dir) / "artifacts" / "source" / "source-manifest.md"
 
 
 def script_artifact_paths(output_dir: str | Path, run_number: int = 1) -> dict[str, Path]:
     run_dir = Path(output_dir) / "artifacts" / "script" / f"run-{run_number}"
     return {
         "script": run_dir / "script.md",
-        "manifest": run_dir / "manifest.json",
+        "contract": run_dir / "script-contract.json",
     }
 
 

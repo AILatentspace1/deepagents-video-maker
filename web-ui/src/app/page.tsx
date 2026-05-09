@@ -2,7 +2,12 @@
 
 import React, { useState, useEffect, useCallback, Suspense } from "react";
 import { useQueryState } from "nuqs";
-import { getConfig, saveConfig, StandaloneConfig } from "@/lib/config";
+import {
+  DEFAULT_CONFIG,
+  getConfig,
+  saveConfig,
+  StandaloneConfig,
+} from "@/lib/config";
 import { ConfigDialog } from "@/app/components/ConfigDialog";
 import { Button } from "@/components/ui/button";
 import { Assistant } from "@langchain/langgraph-sdk";
@@ -24,6 +29,20 @@ interface HomePageInnerProps {
   handleSaveConfig: (config: StandaloneConfig) => void;
 }
 
+function fallbackAssistant(config: StandaloneConfig): Assistant {
+  return {
+    assistant_id: config.assistantId,
+    graph_id: config.assistantId,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    config: {},
+    metadata: {},
+    version: 1,
+    name: config.assistantId || "video-maker",
+    context: {},
+  };
+}
+
 function HomePageInner({
   config,
   configDialogOpen,
@@ -36,7 +55,9 @@ function HomePageInner({
 
   const [mutateThreads, setMutateThreads] = useState<(() => void) | null>(null);
   const [interruptCount, setInterruptCount] = useState(0);
-  const [assistant, setAssistant] = useState<Assistant | null>(null);
+  const [assistant, setAssistant] = useState<Assistant>(() =>
+    fallbackAssistant(config)
+  );
 
   const fetchAssistant = useCallback(async () => {
     const isUUID =
@@ -51,17 +72,7 @@ function HomePageInner({
         setAssistant(data);
       } catch (error) {
         console.error("Failed to fetch assistant:", error);
-        setAssistant({
-          assistant_id: config.assistantId,
-          graph_id: config.assistantId,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          config: {},
-          metadata: {},
-          version: 1,
-          name: "Assistant",
-          context: {},
-        });
+        setAssistant(fallbackAssistant(config));
       }
     } else {
       try {
@@ -83,20 +94,14 @@ function HomePageInner({
           "Failed to find default assistant from graph_id: try setting the assistant_id directly:",
           error
         );
-        setAssistant({
-          assistant_id: config.assistantId,
-          graph_id: config.assistantId,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          config: {},
-          metadata: {},
-          version: 1,
-          name: config.assistantId,
-          context: {},
-        });
+        setAssistant(fallbackAssistant(config));
       }
     }
-  }, [client, config.assistantId]);
+  }, [client, config]);
+
+  useEffect(() => {
+    setAssistant(fallbackAssistant(config));
+  }, [config]);
 
   useEffect(() => {
     fetchAssistant();
@@ -211,20 +216,17 @@ function HomePageInner({
 }
 
 function HomePageContent() {
-  const [config, setConfig] = useState<StandaloneConfig | null>(null);
+  const [config, setConfig] = useState<StandaloneConfig>(DEFAULT_CONFIG);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [assistantId, setAssistantId] = useQueryState("assistantId");
 
-  // On mount, check for saved config, otherwise show config dialog
+  // On mount, check for saved config. Default to local dev config immediately
+  // so http://127.0.0.1:3000/ opens the Producer UI without a setup screen.
   useEffect(() => {
-    const savedConfig = getConfig();
-    if (savedConfig) {
-      setConfig(savedConfig);
-      if (!assistantId) {
-        setAssistantId(savedConfig.assistantId);
-      }
-    } else {
-      setConfigDialogOpen(true);
+    const savedConfig = getConfig() ?? DEFAULT_CONFIG;
+    setConfig(savedConfig);
+    if (!assistantId) {
+      setAssistantId(savedConfig.assistantId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -243,35 +245,6 @@ function HomePageContent() {
 
   const langsmithApiKey =
     config?.langsmithApiKey || process.env.NEXT_PUBLIC_LANGSMITH_API_KEY || "";
-
-  if (!config) {
-    return (
-      <>
-        <ConfigDialog
-          open={configDialogOpen}
-          onOpenChange={setConfigDialogOpen}
-          onSave={handleSaveConfig}
-        />
-        <div className="flex h-screen items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold">
-              Welcome to Video-Maker Deep Agent
-            </h1>
-            <p className="mt-2 text-muted-foreground">
-              Connect to a local LangGraph deployment and start the video-maker
-              Producer workflow.
-            </p>
-            <Button
-              onClick={() => setConfigDialogOpen(true)}
-              className="mt-4"
-            >
-              Open Configuration
-            </Button>
-          </div>
-        </div>
-      </>
-    );
-  }
 
   return (
     <ClientProvider

@@ -17,3 +17,5 @@ test-results/
 .langgraph-dev.*
 uv.lock
 .claude/
+runs/
+*.mp4

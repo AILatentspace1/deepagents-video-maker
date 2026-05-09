@@ -2,55 +2,26 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import Any, Callable
 
 from .prompts import load_prompt, load_subagent_prompt
 from .langchain_tools import build_langchain_tools
+from .middleware import VideoMakerUiStateMiddleware
 
 
-SUBAGENT_NAMES = ["researcher", "scriptwriter"]
+SUBAGENT_NAMES = ["scriptwriter", "remotion-builder"]
 
 _SUBAGENT_SKILL_DIRS = {
-    "researcher": ".deepagents/skills/video-researcher",
-    "scriptwriter": ".deepagents/skills/video-scriptwriter",
+    "scriptwriter": ".deepagents/skills/video-maker-v2-scriptwriter",
+    "remotion-builder": ".deepagents/skills/video-maker-v2-remotion-builder",
 }
-
-
-def build_researcher_extra_tools() -> list[Any]:
-    """Return extra tools for the researcher subagent (e.g. web search).
-
-    Tavily is included when TAVILY_API_KEY is set in the environment.
-    Returns an empty list if no search key is configured.
-    """
-    tools: list[Any] = []
-    tavily_key = os.environ.get("TAVILY_API_KEY")
-    if tavily_key:
-        try:
-            from langchain_tavily import TavilySearch
-
-            tools.append(
-                TavilySearch(
-                    max_results=8,
-                    tavily_api_key=tavily_key,
-                    description=(
-                        "Search the web for up-to-date information. "
-                        "Use when source=websearch or when local knowledge is insufficient."
-                    ),
-                )
-            )
-        except ImportError:
-            pass  # langchain-tavily not installed; skip silently
-    return tools
 
 
 def build_subagents(project_root: str | Path | None = None) -> list[dict[str, Any]]:
     """Build DeepAgents subagent configs from native prompt files."""
 
     root = Path(project_root or Path.cwd()).resolve()
-    researcher_extra_tools = build_researcher_extra_tools()
-
     subagents: list[dict[str, Any]] = []
     for name in SUBAGENT_NAMES:
         spec: dict[str, Any] = {
@@ -59,8 +30,6 @@ def build_subagents(project_root: str | Path | None = None) -> list[dict[str, An
             "system_prompt": load_subagent_prompt(name),
             "skills": [str(root / _SUBAGENT_SKILL_DIRS[name])],
         }
-        if name == "researcher" and researcher_extra_tools:
-            spec["tools"] = researcher_extra_tools
         subagents.append(spec)
     return subagents
 
@@ -94,6 +63,8 @@ def create_video_maker_agent(
         ) from exc
 
     root = Path(project_root or Path.cwd()).resolve()
+    import os
+
     os.environ.setdefault("ORCHESTRATOR_SKILLS_ROOT", str(root))
     effective_backend = backend or FilesystemBackend(root_dir=root, virtual_mode=True)
 
@@ -102,6 +73,7 @@ def create_video_maker_agent(
         tools=build_native_tools(),
         system_prompt=load_prompt("producer"),
         subagents=build_subagents(root),
+        middleware=[VideoMakerUiStateMiddleware()],
         backend=effective_backend,
         checkpointer=checkpointer,
         interrupt_on=(
@@ -118,8 +90,8 @@ def create_video_maker_agent(
 
 def _subagent_description(name: str) -> str:
     descriptions = {
-        "researcher": "Collects structured research and writes research.md.",
-        "scriptwriter": "Writes script.md and manifest.json from research artifacts.",
+        "scriptwriter": "Writes video-maker-v2 script.md from source-manifest.md and script-contract.json.",
+        "remotion-builder": "Builds a standalone Remotion project from approved video-maker-v2 script artifacts.",
         "evaluator": "Evaluates script/manifest artifacts and writes structured eval JSON.",
         "reviewer": "Performs Layer 2 quality review and writes review artifacts.",
         "editor": "Edits or patches scene-level visual/video artifacts.",

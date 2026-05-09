@@ -13,10 +13,12 @@ dependencies = [
   "langchain-community>=0.4.1",
   "tavily-python>=0.7.23",
   "langchain-tavily>=0.2.18",
+  "faster-whisper>=1.2.1",
 ]
 
 [dependency-groups]
 dev = [
+    "isort>=8.0.1",
     "langgraph-cli[inmem]>=0.2",
     "pytest>=8.0.0",
 ]

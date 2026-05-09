@@ -100,25 +100,55 @@ def resolve_model(model: Any) -> Any:
 
 
 def _ensure_under_project(path: Path) -> Path:
-    resolved = path.resolve()
-    try:
-        resolved.relative_to(PROJECT_ROOT)
-    except ValueError as exc:
-        raise ValueError(f"cwd must stay under project root: {PROJECT_ROOT}") from exc
+    resolved = _resolve_local_path(path)
+    if not _is_under_project(resolved):
+        raise ValueError(f"cwd must stay under project root: {PROJECT_ROOT}")
     return resolved
+
+
+def _strip_windows_extended_prefix(path: str) -> str:
+    r"""Normalize Windows extended-length paths before project-root checks.
+
+    DeepAgents can emit paths such as ``\\?\E:\repo\file``.  Python and the
+    DeepAgents filesystem validator may compare that string against ``E:\repo``
+    as if they were different roots, so normalize it at the adapter boundary.
+    """
+
+    raw = path.strip()
+    if raw.startswith("\\\\?\\UNC\\"):
+        return "\\\\" + raw[8:]
+    if raw.startswith("\\\\?\\"):
+        return raw[4:]
+    return raw
+
+
+def _resolve_local_path(path: str | Path) -> Path:
+    return Path(_strip_windows_extended_prefix(str(path))).resolve()
+
+
+def _is_under_project(path: Path) -> bool:
+    project = PROJECT_ROOT.resolve()
+    try:
+        path.relative_to(project)
+        return True
+    except ValueError:
+        try:
+            return os.path.commonpath([str(path), str(project)]) == str(project)
+        except ValueError:
+            return False
 
 
 def to_virtual_path(path: str) -> str:
     """Normalize common local/project paths to DeepAgents virtual paths."""
     if not isinstance(path, str):
         return path
-    raw = path.strip()
+    raw = _strip_windows_extended_prefix(path)
     if raw.startswith("/workspace/"):
         return "/" + raw.removeprefix("/workspace/")
     candidate = Path(raw)
     if candidate.is_absolute():
         try:
-            rel = candidate.resolve().relative_to(PROJECT_ROOT)
+            rel = _resolve_local_path(raw).relative_to(PROJECT_ROOT.resolve())
             return "/" + str(rel).replace("\\", "/")
         except Exception:
             return raw
@@ -202,9 +232,12 @@ def build_agent(model: Any, interrupt: bool = False, checkpointer: bool = False)
 def check_files() -> None:
     required_paths = [
         PROJECT_ROOT / "src" / "deepagents_video_maker" / "__init__.py",
-        PROJECT_ROOT / "skills" / "video-maker" / "SKILL.md",
-        PROJECT_ROOT / ".deepagents" / "skills" / "video-researcher" / "SKILL.md",
-        PROJECT_ROOT / ".deepagents" / "skills" / "video-scriptwriter" / "SKILL.md",
+        PROJECT_ROOT / "skills" / "video-maker-v2" / "SKILL.md",
+        PROJECT_ROOT / "skills" / "video-maker-v2" / "references" / "workflow-contract.md",
+        PROJECT_ROOT / "skills" / "video-maker-v2" / "agents" / "scriptwriter.md",
+        PROJECT_ROOT / "skills" / "video-maker-v2" / "agents" / "remotion-builder.md",
+        PROJECT_ROOT / ".deepagents" / "skills" / "video-maker-v2-scriptwriter" / "SKILL.md",
+        PROJECT_ROOT / ".deepagents" / "skills" / "video-maker-v2-remotion-builder" / "SKILL.md",
     ]
     missing = [
         str(p.relative_to(PROJECT_ROOT)) for p in required_paths if not p.exists()
@@ -224,7 +257,7 @@ def check_files() -> None:
             "Required files are empty (re-run 'git checkout' or check LFS):\n"
             + "\n".join(f"  - {f}" for f in empty)
         )
-    print("OK: deepagents-video-maker files are present.")
+    print("OK: deepagents-video-maker v2 files are present.")
     print(f"  project root : {PROJECT_ROOT}")
     for p in required_paths:
         size = p.stat().st_size

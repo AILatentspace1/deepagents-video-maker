@@ -9,79 +9,21 @@ from pathlib import Path
 from .models import RatifyCheck, RatifyResult
 
 
-def ratify_research(
-    research_path: str | Path,
-    *,
-    source: str,
-    min_chars: int = 800,
-    min_headings: int = 3,
-) -> RatifyResult:
-    path = Path(research_path)
-    checks: list[RatifyCheck] = []
-
-    exists = path.exists() and path.is_file()
-    checks.append(RatifyCheck("exists", exists, f"{path} exists={exists}"))
-    if not exists:
-        return _result(checks)
-
-    content = path.read_text(encoding="utf-8")
-    char_count = len(content)
-    heading_count = len(re.findall(r"(?m)^##\s+", content))
-    url_count = len(re.findall(r"https?://", content))
-
-    checks.append(
-        RatifyCheck(
-            "min_chars",
-            char_count > min_chars,
-            f"char_count={char_count}, required>{min_chars}",
-            {"char_count": char_count},
-        )
-    )
-    checks.append(
-        RatifyCheck(
-            "min_headings",
-            heading_count >= min_headings,
-            f"heading_count={heading_count}, required>={min_headings}",
-            {"heading_count": heading_count},
-        )
-    )
-    # Accept both "local-file" and "local_file" spellings
-    if source not in ("local-file", "local_file"):
-        checks.append(
-            RatifyCheck(
-                "min_urls",
-                url_count >= 1,
-                "non-local-file research requires at least one URL",
-                {"url_count": url_count},
-            )
-        )
-    else:
-        checks.append(
-            RatifyCheck(
-                "min_urls",
-                True,
-                "local-file source skips URL requirement",
-                {"url_count": url_count, "skipped": True},
-            )
-        )
-    return _result(checks)
-
-
 def ratify_script(
     script_path: str | Path,
-    manifest_path: str | Path,
+    contract_path: str | Path,
 ) -> RatifyResult:
     script = Path(script_path)
-    manifest = Path(manifest_path)
+    contract = Path(contract_path)
     checks: list[RatifyCheck] = []
 
     script_exists = script.exists() and script.is_file()
     checks.append(RatifyCheck("script_exists", script_exists, f"{script} exists={script_exists}"))
-    manifest_exists = manifest.exists() and manifest.is_file()
+    contract_exists = contract.exists() and contract.is_file()
     checks.append(
-        RatifyCheck("manifest_exists", manifest_exists, f"{manifest} exists={manifest_exists}")
+        RatifyCheck("contract_exists", contract_exists, f"{contract} exists={contract_exists}")
     )
-    if not (script_exists and manifest_exists):
+    if not (script_exists and contract_exists):
         return _result(checks)
 
     text = script.read_text(encoding="utf-8")
@@ -97,74 +39,57 @@ def ratify_script(
     )
 
     try:
-        data = json.loads(manifest.read_text(encoding="utf-8"))
+        data = json.loads(contract.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
-        checks.append(RatifyCheck("manifest_parseable", False, f"json error: {exc}"))
+        checks.append(RatifyCheck("contract_parseable", False, f"json error: {exc}"))
         return _result(checks)
-    checks.append(RatifyCheck("manifest_parseable", True, "json parseable"))
+    checks.append(RatifyCheck("contract_parseable", True, "json parseable"))
 
     if not isinstance(data, dict):
         checks.append(
             RatifyCheck(
-                "manifest_is_object",
+                "contract_is_object",
                 False,
-                f"manifest top-level must be object, got {type(data).__name__}",
+                f"script contract top-level must be object, got {type(data).__name__}",
             )
         )
         return _result(checks)
-    checks.append(RatifyCheck("manifest_is_object", True, "manifest top-level is object"))
+    checks.append(RatifyCheck("contract_is_object", True, "script contract top-level is object"))
 
-    scenes = data.get("scenes")
-    if not isinstance(scenes, list) or not scenes:
-        checks.append(RatifyCheck("manifest_has_scenes", False, "manifest.scenes missing/empty"))
-        return _result(checks)
-    checks.append(RatifyCheck("manifest_has_scenes", True, f"manifest_scene_count={len(scenes)}"))
-
-    for idx, scene in enumerate(scenes):
-        if not isinstance(scene, dict):
-            checks.append(RatifyCheck(f"scene_{idx}_is_object", False, f"scene[{idx}] not an object"))
-            return _result(checks)
-        for field in ("id", "narration", "duration"):
-            if field not in scene:
-                checks.append(
-                    RatifyCheck(
-                        f"manifest_scene_{idx}_field_{field}",
-                        False,
-                        f"scene[{idx}] missing field={field}",
-                    )
-                )
-                return _result(checks)
-        duration = scene.get("duration")
-        if not isinstance(duration, (int, float)) or duration <= 0:
-            checks.append(
-                RatifyCheck(
-                    f"scene_{idx}_duration",
-                    False,
-                    f"scene[{idx}].duration must be positive number, got {duration!r}",
-                )
-            )
-            return _result(checks)
-
-    ids = [scene.get("id") for scene in scenes]
-    if len(set(ids)) != len(ids):
-        checks.append(RatifyCheck("scene_ids_unique", False, f"duplicate scene ids: {ids}"))
-        return _result(checks)
-    checks.append(RatifyCheck("scene_ids_unique", True, "all scene ids unique"))
-
+    target = data.get("target_scene_count", {})
+    min_scenes = int(target.get("min", 1)) if isinstance(target, dict) else 1
+    max_scenes = int(target.get("max", 999)) if isinstance(target, dict) else 999
     checks.append(
         RatifyCheck(
-            "scene_count_match",
-            len(scenes) == script_scene_count,
-            f"manifest={len(scenes)} script={script_scene_count}",
-            {"manifest_scene_count": len(scenes), "script_scene_count": script_scene_count},
+            "scene_count_in_contract_range",
+            min_scenes <= script_scene_count <= max_scenes,
+            f"script_scene_count={script_scene_count}, expected={min_scenes}..{max_scenes}",
+            {"script_scene_count": script_scene_count, "min": min_scenes, "max": max_scenes},
         )
     )
 
     type_re = re.compile(r"(?m)^type:\s*(\w+)")
+    scene_types: list[str] = []
     for block in scene_blocks:
         type_match = type_re.search(block)
         scene_type = type_match.group(1) if type_match else ""
-        if scene_type in {"narration", "data_card", "quote_card"}:
+        if re.search(r"(?m)^Type:", block) or re.search(r"(?m)^Scene intent:", block):
+            checks.append(
+                RatifyCheck(
+                    "scene_canonical_field_names",
+                    False,
+                    "scene fields must use canonical lowercase keys: type:, scene_intent:, content_brief:",
+                )
+            )
+            return _result(checks)
+        if not scene_type:
+            checks.append(
+                RatifyCheck("scene_type_required", False, "scene missing canonical type: field")
+            )
+            return _result(checks)
+        if scene_type:
+            scene_types.append(scene_type)
+        if scene_type in {"narration", "data_card", "quote_card", "diagram_walkthrough"}:
             for required in ("scene_intent:", "content_brief:"):
                 if required not in block:
                     checks.append(
@@ -185,10 +110,97 @@ def ratify_script(
                         )
                     )
                     return _result(checks)
+        if scene_type == "data_card":
+            if "data_semantic:" not in block or not (
+                re.search(r"(?m)^(items|source_items):", block)
+            ):
+                checks.append(
+                    RatifyCheck(
+                        "data_card_grounding",
+                        False,
+                        "data_card scene missing source-grounded data_semantic/items",
+                    )
+                )
+                return _result(checks)
+        if scene_type == "narration" and "data_semantic:" in block:
+            checks.append(
+                RatifyCheck(
+                    "narration_no_data_semantic",
+                    False,
+                    "narration scene must not include data_semantic",
+                )
+            )
+            return _result(checks)
+    if _has_too_many_consecutive(scene_types, max_count=3):
+        checks.append(
+            RatifyCheck(
+                "max_consecutive_same_type",
+                False,
+                "more than 3 consecutive scenes use the same type",
+                {"scene_types": scene_types},
+            )
+        )
+        return _result(checks)
+    checks.append(RatifyCheck("max_consecutive_same_type", True, "scene type repetition OK"))
     checks.append(
         RatifyCheck("script_business_rules", True, "scene_intent/content_brief/no-layer_hint OK")
     )
     return _result(checks)
+
+
+def ratify_source_manifest(manifest_path: str | Path, *, source: str) -> RatifyResult:
+    path = Path(manifest_path)
+    checks: list[RatifyCheck] = []
+    exists = path.exists() and path.is_file()
+    checks.append(RatifyCheck("manifest_exists", exists, f"{path} exists={exists}"))
+    if not exists:
+        return _result(checks)
+
+    text = path.read_text(encoding="utf-8")
+    checks.append(RatifyCheck("has_title", "# Source Manifest" in text, "has # Source Manifest"))
+    checks.append(RatifyCheck("has_items", "## Items" in text, "has ## Items"))
+    checks.append(RatifyCheck("has_path", "- path:" in text, "has at least one path item"))
+    error_items = re.findall(r"(?m)^- note:\s*ERROR:\s*(.+)$", text)
+    checks.append(
+        RatifyCheck(
+            "has_no_error_items",
+            not error_items,
+            "; ".join(error_items) if error_items else "no error items",
+            {"error_items": error_items},
+        )
+    )
+    if source == "websearch":
+        checks.append(RatifyCheck("has_url", bool(re.search(r"https?://", text)), "websearch requires URL"))
+    if source in {"folder", "local-file", "local_file"}:
+        paths = [
+            match.strip()
+            for match in re.findall(r"(?m)^- path:\s*(.+)$", text)
+            if match.strip() and not re.match(r"https?://", match.strip())
+        ]
+        missing = [item for item in paths if not Path(item).exists()]
+        checks.append(
+            RatifyCheck(
+                "local_paths_exist",
+                not missing,
+                f"missing local paths: {missing}" if missing else "all local paths exist",
+                {"missing": missing},
+            )
+        )
+    return _result(checks)
+
+
+def _has_too_many_consecutive(values: list[str], *, max_count: int) -> bool:
+    previous = None
+    count = 0
+    for value in values:
+        if value == previous:
+            count += 1
+        else:
+            previous = value
+            count = 1
+        if count > max_count:
+            return True
+    return False
 
 
 def _result(checks: list[RatifyCheck]) -> RatifyResult:

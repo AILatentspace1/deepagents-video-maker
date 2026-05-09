@@ -1,80 +1,76 @@
 # deepagents-video-maker
 
-DeepAgents-native video-maker orchestrator. Current runnable pipeline: **research → script**. Assets/assembly milestone will be integrated via a standalone rendering toolchain in a future plan.
+DeepAgents-native `video-maker-v2` orchestrator. The old research-first `video-maker` skill is no longer supported. Current pipeline is **Source Intake → Script → user review checkpoint → Build Scenes → Render Package**; build/render continues only after explicit user approval.
 
 ## Quick Start
 
 ```bash
-# Python env
-uv sync  # requires `uv` installed (see below)
-
-# Node packages
-pnpm install
-
-# Run tests
-pnpm test:py
-
-# Start LangGraph dev server
+uv sync && pnpm install
+uv run pytest tests/deepagents_video_maker -q
+uv run python scripts/deepagents_video_maker.py --check
+uv run python scripts/run_golden_demo_smoke.py
 pnpm agent:dev
 ```
 
-### Prerequisites
-
-- `uv` (Python package manager)
-  - If `uv` is not installed, `python -m pip install uv` is sufficient for dev.
-- `pnpm` (Node package manager)
-  - If `pnpm` is not installed, `corepack enable` will provide it.
-
 ## Architecture
 
-```
+```text
 src/deepagents_video_maker/   # Python orchestration layer (DeepAgents Producer)
-skills/video-maker/           # Business knowledge md (milestones, agents, ratify)
-.deepagents/skills/           # Subagent skill wrappers (researcher, scriptwriter)
-web-ui/                       # Next.js + LangGraph Dev UI
-scripts/                      # CLI runner + smoke tests
-tests/                        # pytest unit tests
+skills/video-maker-v2/         # v2 business knowledge, contracts, scriptwriter/remotion instructions
+.deepagents/skills/            # v2 subagent wrapper(s)
+web-ui/                        # Next.js + LangGraph Dev UI
+scripts/                       # CLI runner + smoke tests
+tests/                         # pytest unit tests
 ```
 
-## Design Docs
+## v2 Artifact Gates
 
-See `docs/design/` for architecture and plan documents.
+See [`docs/golden-demo.md`](docs/golden-demo.md) for the canonical local demo
+path and product-readiness checklist.
 
-## Artifact Gates
-
-The pipeline enforces artifact validation (ratify) gates before advancing each milestone.
-
-### Research artifact
+### Source Intake
 
 | Artifact | Path | Required |
 |----------|------|----------|
-| Research report | `output/<session>/artifacts/research/run-<n>/research.md` | Yes |
+| Source manifest | `output/<session>/artifacts/source/source-manifest.md` | Yes |
 
-Validation rules (`ratify_research`):
+Validation rules:
 - File must exist.
-- Content must be **> 800 characters**.
-- Must contain **≥ 3 level-2 headings** (`## …`).
-- Must contain **≥ 1 URL** — unless `source` is `local-file` / `local_file`.
+- Must contain `# Source Manifest`.
+- Must contain `## Items`.
+- Must contain at least one `- path:` item.
+- `source=websearch` requires at least one URL.
 
-### Script artifacts
-
-Both files must be present for the script gate to pass.
+### Script checkpoint
 
 | Artifact | Path | Required |
 |----------|------|----------|
+| Script contract | `output/<session>/artifacts/script/run-<n>/script-contract.json` | Yes |
 | Script markdown | `output/<session>/artifacts/script/run-<n>/script.md` | Yes |
-| Scene manifest | `output/<session>/artifacts/script/run-<n>/manifest.json` | Yes |
 
-Validation rules (`ratify_script`):
+Validation rules:
 - Both files must exist.
-- Script must contain **≥ 1 `## Scene …` block**.
-- `manifest.json` must be a valid JSON object with a non-empty `"scenes"` array.
-- Every scene object must include `id`, `narration`, and `duration` (positive number).
-- Scene `id` values must be unique across the manifest.
-- Scene count in the manifest must match the scene count in the script.
-- Scenes with `type: narration`, `type: data_card`, or `type: quote_card` in the **script markdown** must include `scene_intent:` and `content_brief:` fields, and must **not** include `layer_hint:` or `beats:`.
+- Script must contain at least one `## Scene ...` block.
+- Scene count must fit `script-contract.json.target_scene_count`.
+- `narration`, `data_card`, and `quote_card` scenes must include `scene_intent:` and `content_brief:`.
+- `layer_hint:` and `beats:` are forbidden in these scene blocks.
 
-### Output directories
+### Build / render checkpoint
 
-All generated output lives under `output/` (git-ignored). No generated files are committed to the repository.
+| Artifact | Path | Required |
+|----------|------|----------|
+| Remotion package | `output/<session>/remotion-project/package.json` | Yes |
+| Remotion entry | `output/<session>/remotion-project/src/index.ts` | Yes |
+| Final video | `output/<session>/final/video.mp4` | Yes |
+| Final thumbnail | `output/<session>/final/thumbnail.jpg` | Warning only |
+| Publish readiness | `output/<session>/final/publish-readiness.md` | Advisory |
 
+Validation rules:
+- Build Scenes requires explicit script approval.
+- Remotion project must contain `package.json` and `src/index.ts`.
+- Render Package requires non-empty `final/video.mp4`.
+- Native final ratify probes `final/video.mp4` duration with `ffprobe` and rejects videos outside the requested duration band.
+- Missing thumbnail is reported as a warning, not a hard failure.
+- Publish readiness is advisory and separates “render succeeded” from “ready to publish”.
+
+Generated output lives under `output/` and is git-ignored.

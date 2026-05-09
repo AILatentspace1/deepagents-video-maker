@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "video": {
+    "title": "Layout-first Remotion Builder Smoke",
+    "width": 640,
+    "height": 360,
+    "fps": 30,
+    "style": "dark tech editorial",
+    "background": "radial-gradient(circle at 20% 20%, #1e3a8a 0, #020617 42%, #030712 100%)"
+  },
+  "scenes": [
+    {
+      "id": "scene-01",
+      "durationSec": 2,
+      "intent": "hook",
+      "layout": {
+        "type": "hero_title",
+        "safeArea": { "x": 48, "y": 36, "width": 544, "height": 288 },
+        "regions": [
+          { "id": "title", "role": "title", "x": 64, "y": 64, "width": 512, "height": 92 },
+          { "id": "subtitle", "role": "subtitle", "x": 88, "y": 164, "width": 464, "height": 70 }
+        ]
+      },
+      "content": {
+        "title": "Layout-first Video",
+        "subtitle": "先规划画面，再由 Remotion 填内容"
+      },
+      "motion": { "intro": "spring reveal", "transitionOut": "fade" },
+      "assetRefs": []
+    },
+    {
+      "id": "scene-02",
+      "durationSec": 2,
+      "intent": "explain",
+      "layout": {
+        "type": "image_left_text_right",
+        "safeArea": { "x": 36, "y": 32, "width": 568, "height": 296 },
+        "regions": [
+          { "id": "visual", "role": "hero", "x": 42, "y": 66, "width": 290, "height": 210 },
+          { "id": "body", "role": "body", "x": 356, "y": 72, "width": 220, "height": 200 }
+        ]
+      },
+      "content": {
+        "title": "Scene Layout Contract",
+        "bullets": ["区域固定", "素材有 slot", "动画可验证"]
+      },
+      "assetRefs": ["workflow-diagram"]
+    },
+    {
+      "id": "scene-03",
+      "durationSec": 2,
+      "intent": "compare",
+      "layout": {
+        "type": "full_bleed_asset_with_caption",
+        "safeArea": { "x": 36, "y": 30, "width": 568, "height": 300 },
+        "regions": [
+          { "id": "background", "role": "background", "x": 24, "y": 24, "width": 592, "height": 270 },
+          { "id": "caption", "role": "caption", "x": 72, "y": 284, "width": 496, "height": 44 }
+        ]
+      },
+      "content": {
+        "caption": "skill 负责描述，Remotion 负责生成视频"
+      },
+      "assetRefs": ["comparison-card"]
+    }
+  ]
+}
