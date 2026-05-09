@@ -29,6 +29,11 @@ pnpm ui:build   # production UI build via Windows-safe wrapper
 
 - Python commands: always `uv run ...`
 - Node commands: always `pnpm ...`
+- Windows/Codex fallback: if the user-profile `pnpm` shim fails before repo
+  scripts run with `EPERM lstat C:\Users\Administrator` or
+  `C:\Users\ADMINI~1`, run the same command through Corepack from the repo
+  root, for example `corepack pnpm install --frozen-lockfile` or
+  `corepack pnpm ui:build`.
 - Environment variables: copy `.env.example` to `.env` and fill in keys
 - `ORCHESTRATOR_SKILLS_ROOT` points to repo root (auto-set by agent.py)
 - Default workflow is `video-maker-v2`; legacy `video-maker` is not supported
@@ -40,4 +45,4 @@ pnpm ui:build   # production UI build via Windows-safe wrapper
 - Publish readiness runs after `final/video.mp4` exists, writes `final/publish-readiness.md` and `ratify/publish-readiness.json`, and is advisory, not a replacement for render ratify
 - `pnpm golden:render` uses simulated renderer output; `pnpm golden:playable` proves a playable MP4, and `uv run python scripts/run_golden_playable_smoke.py --renderer remotion --install` exercises the Remotion CLI path
 - `pnpm ui:build` runs `scripts/build-ui.mjs`, which sets `NEXT_TELEMETRY_DISABLED=1`/`CI=1` and avoids intermittent Windows `spawn EPERM` failures
-- Better-harness optimization is scoped to `skills/video-maker-v2/agents/scriptwriter.md`; use `pnpm harness:validate` before `pnpm harness:run`
+- Better-harness optimization is scoped to `skills/video-maker-v2/agents/scriptwriter.md`; use `pnpm harness:validate` before `pnpm harness:run`. This requires the external `better-harness` CLI to be installed in the active `uv` environment; a fresh `uv sync` does not install it yet.
