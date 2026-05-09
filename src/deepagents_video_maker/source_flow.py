@@ -148,7 +148,7 @@ def _error_item(source_type: str, path: str, note: str) -> dict[str, object]:
 
 
 def _websearch_items(goal: VideoMakerGoal) -> list[dict[str, object]]:
-    tavily_key = os.environ.get("TAVILY_API_KEY")
+    tavily_key = _tavily_api_key()
     if not tavily_key:
         return [
             _error_item(
@@ -186,6 +186,24 @@ def _websearch_items(goal: VideoMakerGoal) -> list[dict[str, object]]:
             }
         )
     return items or [_error_item("websearch", "websearch", "websearch returned no URL results")]
+
+
+def _tavily_api_key() -> str:
+    key = os.environ.get("TAVILY_API_KEY", "").strip()
+    if key:
+        return key
+    root = Path(os.environ.get("ORCHESTRATOR_SKILLS_ROOT", "") or Path.cwd())
+    env_path = root / ".env"
+    if not env_path.is_file():
+        return ""
+    for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        name, value = line.split("=", 1)
+        if name.strip() == "TAVILY_API_KEY":
+            return value.strip().strip('"').strip("'")
+    return ""
 
 
 def _item_from_file(path: Path, root: Path) -> dict[str, object]:

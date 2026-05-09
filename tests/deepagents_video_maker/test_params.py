@@ -27,7 +27,13 @@ def test_slug_is_stable_for_mixed_topic():
     assert goal.slug() == "介绍-video-maker-v2-skill"
 
 
-def test_parse_video_request_defaults_to_manual_source_for_free_text():
+def test_parse_video_request_defaults_to_websearch_source_for_free_text():
     goal = parse_video_request("介绍一个没有显式 source 的视频")
 
-    assert goal.source == "manual"
+    assert goal.source == "websearch"
+
+
+def test_parse_video_request_defaults_to_websearch_when_no_source_path():
+    goal = parse_video_request("topic=AI Agent")
+
+    assert goal.source == "websearch"

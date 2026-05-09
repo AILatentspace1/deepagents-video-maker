@@ -32,6 +32,67 @@ Expected result:
 This stops at the script review checkpoint. That is intentional: Build Scenes
 and Render Package require explicit approval.
 
+## Approved-script downstream smoke
+
+After the script checkpoint is proven, use the approved script fixture to test
+Build Scenes, Render Package, and Publish Readiness plumbing without invoking an
+LLM or a real Remotion browser render:
+
+```powershell
+$env:UV_CACHE_DIR='E:\workspace\deepagents-video-maker\.uv-cache'
+uv run python scripts/run_golden_render_smoke.py
+```
+
+Expected result:
+
+- `output/golden-render-smoke-video-ai-agent-intro/remotion-project/package.json`
+- `output/golden-render-smoke-video-ai-agent-intro/remotion-project/src/index.ts`
+- `output/golden-render-smoke-video-ai-agent-intro/final/video.mp4`
+- `output/golden-render-smoke-video-ai-agent-intro/final/thumbnail.jpg`
+- `output/golden-render-smoke-video-ai-agent-intro/final/publish-readiness.md`
+- `output/golden-render-smoke-video-ai-agent-intro/ratify/render-package.json`
+- `output/golden-render-smoke-video-ai-agent-intro/ratify/publish-readiness.json`
+
+This smoke writes deterministic simulated renderer output. It validates the
+approved-script downstream state, package, ratify, and publish-readiness path;
+it does **not** claim final visual quality or replace a real Remotion render.
+
+## Playable golden smoke
+
+Use this tier when you need proof that the golden path produces a real,
+probeable MP4 instead of the simulated fixture used by `golden:render`:
+
+```powershell
+$env:UV_CACHE_DIR='E:\workspace\deepagents-video-maker\.uv-cache'
+pnpm golden:playable
+```
+
+Expected result:
+
+- `output/golden-playable-smoke-video-ai-agent-intro/remotion-project/package.json`
+- `output/golden-playable-smoke-video-ai-agent-intro/remotion-project/src/index.ts`
+- `output/golden-playable-smoke-video-ai-agent-intro/final/video.mp4`
+- `output/golden-playable-smoke-video-ai-agent-intro/final/thumbnail.jpg`
+- `output/golden-playable-smoke-video-ai-agent-intro/ratify/render-package.json`
+- `output/golden-playable-smoke-video-ai-agent-intro/final/publish-readiness.md`
+
+The default playable smoke uses local `ffmpeg` to produce deterministic video
+media, then validates the final MP4 with `ffprobe` through the native
+Render Package ratifier. This is a product-demo proof that the output is
+playable, not a visual-quality approval.
+
+To exercise the generated minimal Remotion project and native Remotion render
+command path instead, run:
+
+```powershell
+$env:UV_CACHE_DIR='E:\workspace\deepagents-video-maker\.uv-cache'
+uv run python scripts/run_golden_playable_smoke.py --renderer remotion --install
+```
+
+If Remotion/Chromium/ffmpeg dependencies are unavailable, this command should
+fail with a clear environment or render diagnostic rather than silently writing
+a fake MP4.
+
 ## Approved script fixture
 
 The checked-in approved script lives at:
@@ -83,7 +144,9 @@ can be complete while publish readiness is still `not_reviewed`.
 $env:UV_CACHE_DIR='E:\workspace\deepagents-video-maker\.uv-cache'
 uv run python scripts/deepagents_video_maker.py --check
 uv run pytest tests/deepagents_video_maker -q
+pnpm golden:playable
 pnpm harness:validate
+pnpm ui:build
 ```
 
 If `pnpm` hits a Windows temp permission issue around `C:\Users\ADMINI~1`, rerun
@@ -95,9 +158,17 @@ $env:TMP='C:\tmp'
 pnpm harness:validate
 ```
 
+The UI production build intentionally runs through
+[`E:\workspace\deepagents-video-maker\scripts\build-ui.mjs`](E:\workspace\deepagents-video-maker\scripts\build-ui.mjs).
+The wrapper invokes the local Next binary with `NEXT_TELEMETRY_DISABLED=1`,
+`CI=1`, and hidden Windows child processes. On this Windows workspace that
+avoids intermittent `spawn EPERM` failures after TypeScript succeeds.
+
 ## Known limitations
 
 - This demo does not prove live `websearch`; `websearch` still requires `TAVILY_API_KEY`.
 - This demo does not make Build Scenes automatic; script approval remains required.
 - Publish readiness starts as a manual/advisory artifact, not a hard workflow blocker.
 - Final Remotion quality still depends on local Remotion/browser/ffmpeg availability.
+- `run_golden_render_smoke.py` uses a simulated renderer-output fixture, not a playable production render.
+- `run_golden_playable_smoke.py` proves playable media by default; use `--renderer remotion --install` when you specifically need to test the Remotion CLI path.

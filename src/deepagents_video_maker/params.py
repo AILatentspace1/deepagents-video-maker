@@ -68,6 +68,14 @@ def parse_video_request(text: str) -> VideoMakerGoal:
 def derive_video_params(goal: VideoMakerGoal) -> VideoMakerGoal:
     """Apply deterministic defaults from video-maker parameter rules."""
 
+    if (
+        goal.source == "manual"
+        and not goal.source_folder
+        and not goal.local_file
+        and not goal.notebook_url
+    ):
+        goal.source = "websearch"
+
     if goal.research_depth == "auto":
         goal.research_depth = {
             "1-3min": "light",
