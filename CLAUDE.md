@@ -22,7 +22,7 @@ pnpm ui:dev                      # Next.js UI dev server
 
 - Python: `uv run ...` always
 - Node: `pnpm ...` always
-- No `.claude/skills` path references in code — use `skills/video-maker/` instead
+- In repo code/docs, do not reference `.claude/skills` paths — use `skills/video-maker/` instead
 - Commit style: conventional commits (feat, fix, docs, chore, refactor, test)
 
 ## Better-Harness (Autonomous Optimization)
@@ -88,4 +88,4 @@ uv run better-harness run harness/video-maker.toml \
 
 ## Optional Tooling
 
-- gstack (slash-command skills like `/plan-ceo-review`, `/review`, `/qa`): install once with `git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git ~/.claude/skills/gstack && cd ~/.claude/skills/gstack && ./setup` (requires Bun ≥1.0).
+- gstack (slash-command skills like `/plan-ceo-review`, `/review`, `/qa`): optional local install for Claude tooling, typically under `~/.claude/skills/gstack`, via `git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git ~/.claude/skills/gstack && cd ~/.claude/skills/gstack && ./setup` (requires Bun ≥1.0).
