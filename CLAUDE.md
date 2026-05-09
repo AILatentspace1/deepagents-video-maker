@@ -50,3 +50,7 @@ The active config is `harness/video-maker-minimal.toml`, and its editable surfac
 - `skills/video-maker-v2/agents/scriptwriter.md`
 
 Do not reintroduce legacy `skills/video-maker/` or `tests/evals` package-script wiring unless the project explicitly decides to restore a broader eval harness.
+
+## Optional Tooling
+
+- gstack (slash-command skills like `/plan-ceo-review`, `/review`, `/qa`): optional local install for Claude tooling, typically under `~/.claude/skills/gstack`, via `git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git ~/.claude/skills/gstack && cd ~/.claude/skills/gstack && ./setup` (requires Bun ≥1.0).
