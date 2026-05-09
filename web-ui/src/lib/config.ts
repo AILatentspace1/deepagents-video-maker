@@ -24,8 +24,14 @@ export function getConfig(): StandaloneConfig | null {
     return {
       ...DEFAULT_CONFIG,
       ...parsed,
-      deploymentUrl: parsed.deploymentUrl?.trim() || DEFAULT_CONFIG.deploymentUrl,
-      assistantId: parsed.assistantId?.trim() || DEFAULT_CONFIG.assistantId,
+      deploymentUrl:
+        typeof parsed.deploymentUrl === "string"
+          ? parsed.deploymentUrl.trim() || DEFAULT_CONFIG.deploymentUrl
+          : DEFAULT_CONFIG.deploymentUrl,
+      assistantId:
+        typeof parsed.assistantId === "string"
+          ? parsed.assistantId.trim() || DEFAULT_CONFIG.assistantId
+          : DEFAULT_CONFIG.assistantId,
     };
   } catch {
     return DEFAULT_CONFIG;

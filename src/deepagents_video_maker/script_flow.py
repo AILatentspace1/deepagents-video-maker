@@ -28,7 +28,14 @@ def start_script_milestone(
         if goal_path.exists():
             goal = load_goal_yaml(goal_path)
     run = create_milestone_run(state, "script")
-    _write_script_contract(goal=goal, state=state, run_info=run)
+    # Only write the contract when the file is absent.  Each new run receives
+    # its own path (run-N/script-contract.json) from create_milestone_run(), so
+    # this path is always fresh on the first pass; the guard prevents a
+    # double-write if start_script_milestone() is somehow called twice for the
+    # same run.
+    paths = script_artifact_paths(state.output_dir, run.run_number)
+    if not paths["contract"].exists():
+        _write_script_contract(goal=goal, state=state, run_info=run)
     return run
 
 
