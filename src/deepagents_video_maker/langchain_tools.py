@@ -20,7 +20,11 @@ from .build_render_flow import (
     start_build_scenes_milestone,
     start_render_package_milestone,
 )
-from .source_flow import start_source_intake_milestone, ratify_and_update_source_intake
+from .source_flow import (
+    run_websearch_and_cache,
+    start_source_intake_milestone,
+    ratify_and_update_source_intake,
+)
 from .script_flow import build_scriptwriter_task_description, ratify_and_update_script, start_script_milestone
 from .state_store import load_goal_yaml, load_state_yaml, save_state_yaml
 from .ui_state import build_video_maker_ui_state_from_state, build_video_maker_ui_state
@@ -98,6 +102,21 @@ def vm_start_source_intake(output_dir: str) -> dict[str, Any]:
     run = start_source_intake_milestone(state)
     save_state_yaml(state, state_path)
     return _with_ui_state({"state": to_jsonable(state), "run": to_jsonable(run)}, state=state)
+
+
+@_tool
+def vm_websearch(output_dir: str, topic: str) -> dict[str, Any]:
+    """Run Tavily websearch for *topic* and cache results in the output directory.
+
+    Call this between vm_start_source_intake and vm_ratify_source_intake when
+    source is 'websearch'.  Returning here makes the search a distinct, visible
+    step in the producer chat timeline so users can see what was retrieved before
+    the manifest is written.  vm_ratify_source_intake will reuse the cached
+    results and will NOT re-call the API.
+    """
+    state = load_state_yaml(Path(output_dir) / "state.yaml")
+    result = run_websearch_and_cache(topic, output_dir)
+    return _with_ui_state(result, state=state)
 
 
 @_tool
@@ -400,6 +419,7 @@ def build_langchain_tools() -> list[Any]:
         vm_init_video_session,
         vm_load_state,
         vm_start_source_intake,
+        vm_websearch,
         vm_ratify_source_intake,
         vm_start_script,
         vm_build_scriptwriter_task,

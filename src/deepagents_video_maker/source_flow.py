@@ -21,7 +21,7 @@ def start_source_intake_milestone(state: VideoMakerState):
 def write_source_manifest(goal: VideoMakerGoal, state: VideoMakerState) -> Path:
     path = source_manifest_path(state.output_dir)
     path.parent.mkdir(parents=True, exist_ok=True)
-    items = _manifest_items(goal)
+    items = _manifest_items(goal, state=state)
     lines = [
         "# Source Manifest",
         "",
@@ -103,7 +103,9 @@ def ratify_and_update_source_intake(state: VideoMakerState, goal: VideoMakerGoal
     return result
 
 
-def _manifest_items(goal: VideoMakerGoal) -> list[dict[str, object]]:
+def _manifest_items(
+    goal: VideoMakerGoal, *, state: VideoMakerState | None = None
+) -> list[dict[str, object]]:
     if goal.source == "folder" and goal.source_folder:
         root = Path(goal.source_folder)
         if not root.exists():
@@ -130,7 +132,8 @@ def _manifest_items(goal: VideoMakerGoal) -> list[dict[str, object]]:
     if goal.source == "local-file":
         return [_error_item("local-file", "", "local_file is required for local-file source")]
     if goal.source == "websearch":
-        return _websearch_items(goal)
+        cache_path = _websearch_cache_path(state.output_dir) if state is not None else None
+        return _websearch_items(goal, cache_path=cache_path)
     if goal.source == "manual":
         return []
     return []
@@ -147,7 +150,43 @@ def _error_item(source_type: str, path: str, note: str) -> dict[str, object]:
     }
 
 
-def _websearch_items(goal: VideoMakerGoal) -> list[dict[str, object]]:
+def _websearch_cache_path(output_dir: str) -> Path:
+    return Path(output_dir) / "artifacts" / "source" / "websearch-results.json"
+
+
+def run_websearch_and_cache(topic: str, output_dir: str | Path) -> dict[str, object]:
+    """Run Tavily websearch, persist results, and return a structured summary.
+
+    Called by the ``vm_websearch`` typed tool so the search appears as a
+    distinct visible step in the producer chat timeline.
+    """
+    goal = VideoMakerGoal(topic=topic, source="websearch")
+    cache_path = _websearch_cache_path(str(output_dir))
+    items = _websearch_items(goal, cache_path=cache_path, force_fresh=True)
+    error = any(str(i.get("note", "")).startswith("ERROR:") for i in items)
+    return {
+        "status": "error" if error else "ok",
+        "item_count": len(items),
+        "items": items,
+        "cache_path": str(cache_path),
+    }
+
+
+def _websearch_items(
+    goal: VideoMakerGoal,
+    *,
+    cache_path: Path | None = None,
+    force_fresh: bool = False,
+) -> list[dict[str, object]]:
+    # Use cached results when available (avoids redundant API call after vm_websearch).
+    if cache_path and not force_fresh and cache_path.exists():
+        try:
+            raw = json.loads(cache_path.read_text(encoding="utf-8"))
+            if isinstance(raw, list) and raw:
+                return raw
+        except Exception:
+            pass
+
     tavily_key = _tavily_api_key()
     if not tavily_key:
         return [
@@ -161,7 +200,9 @@ def _websearch_items(goal: VideoMakerGoal) -> list[dict[str, object]]:
         from tavily import TavilyClient
 
         client = TavilyClient(api_key=tavily_key)
-        response = client.search(query=goal.topic, max_results=8, search_depth="basic")
+        # advanced depth gives richer per-result content; scriptwriter needs
+        # real numbers/quotes to ground data_card scenes — 240 chars is not enough.
+        response = client.search(query=goal.topic, max_results=8, search_depth="advanced")
     except Exception as exc:  # pragma: no cover - depends on external provider/network
         return [_error_item("websearch", "websearch", f"websearch failed: {exc}")]
 
@@ -174,7 +215,9 @@ def _websearch_items(goal: VideoMakerGoal) -> list[dict[str, object]]:
         if not url:
             continue
         title = str(result.get("title", url)).strip() or url
-        snippet = str(result.get("content", "")).strip().replace("\n", " ")
+        # Prefer richer raw_content when Tavily returns it; fall back to content.
+        raw = result.get("raw_content") or result.get("content") or ""
+        snippet = str(raw).strip().replace("\n", " ")
         items.append(
             {
                 "name": title,
@@ -182,9 +225,21 @@ def _websearch_items(goal: VideoMakerGoal) -> list[dict[str, object]]:
                 "path": url,
                 "size_bytes": "unknown",
                 "readable": "yes",
-                "note": snippet[:240] or "websearch result",
+                # 2000 chars gives scriptwriter meaningful context for claims/stats.
+                "note": snippet[:2000] or "websearch result",
             }
         )
+
+    # Persist to cache so vm_ratify_source_intake reuses without re-calling Tavily.
+    if cache_path and items:
+        try:
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            cache_path.write_text(
+                json.dumps(items, indent=2, ensure_ascii=False), encoding="utf-8"
+            )
+        except Exception:
+            pass
+
     return items or [_error_item("websearch", "websearch", "websearch returned no URL results")]
 
 

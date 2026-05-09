@@ -17,7 +17,7 @@ for user review.
 每推进一个 milestone，必须遵守：
 
 1. `inspect_state`：cold start 调用 `vm_init_video_session(...)`，resume 调用 `vm_load_state(output_dir)`。
-2. `source_intake`：调用 `vm_start_source_intake(output_dir)`，再调用 `vm_ratify_source_intake(output_dir)` 写入并校验 `artifacts/source/source-manifest.md`。
+2. `source_intake`：调用 `vm_start_source_intake(output_dir)`。若 `goal.source == "websearch"`，**必须**先调用 `vm_websearch(output_dir, topic)` 执行搜索并缓存结果（此步在 UI 时间线中单独可见），再调用 `vm_ratify_source_intake(output_dir)` 写入并校验 `artifacts/source/source-manifest.md`（会自动复用缓存，不重复调 API）。
 3. `script`：只有 Source Intake completed 后，调用 `vm_start_script(output_dir)`，再调用 `vm_build_scriptwriter_task(...)`。
 4. `dispatch`：脚本生成必须是真实 `task(subagent_type="scriptwriter", description=...)`。
 5. `verify_artifact_gate`：调用 `vm_ratify_script(...)`，不相信口头完成。
@@ -37,6 +37,7 @@ for user review.
 - `vm_init_video_session`
 - `vm_load_state`
 - `vm_start_source_intake`
+- `vm_websearch`
 - `vm_ratify_source_intake`
 - `vm_start_script`
 - `vm_build_scriptwriter_task`

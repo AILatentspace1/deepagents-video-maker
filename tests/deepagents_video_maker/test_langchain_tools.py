@@ -179,6 +179,7 @@ def test_build_langchain_tools_exposes_v2_tools_only():
     names = {t.name for t in build_langchain_tools()}
     assert {
         "vm_start_source_intake",
+        "vm_websearch",
         "vm_ratify_source_intake",
         "vm_start_script",
         "vm_build_scriptwriter_task",
