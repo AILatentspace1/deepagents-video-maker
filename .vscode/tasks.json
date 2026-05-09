@@ -1,0 +1,44 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "agent:dev",
+      "type": "shell",
+      "command": "pnpm agent:dev",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "servers"
+      }
+    },
+    {
+      "label": "ui:dev",
+      "type": "shell",
+      "command": "pnpm ui:dev",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "servers"
+      }
+    },
+    {
+      "label": "dev:servers",
+      "dependsOrder": "parallel",
+      "dependsOn": [
+        "agent:dev",
+        "ui:dev"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}

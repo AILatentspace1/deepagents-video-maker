@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "LangGraph Agent Dev Server",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm agent:dev",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Next UI Dev Server",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm ui:dev",
+      "cwd": "${workspaceFolder}"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Agent + UI Dev Servers",
+      "configurations": [
+        "LangGraph Agent Dev Server",
+        "Next UI Dev Server"
+      ],
+      "stopAll": true
+    }
+  ]
+}
