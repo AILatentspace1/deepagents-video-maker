@@ -112,7 +112,7 @@ def ratify_script(
                     return _result(checks)
         if scene_type == "data_card":
             if "data_semantic:" not in block or not (
-                re.search(r"(?m)^(items|source_items):", block)
+                re.search(r"(?m)^\s*(items|source_items):", block)
             ):
                 checks.append(
                     RatifyCheck(
